@@ -1,0 +1,45 @@
+[project]
+# Underscores are required, not stylistic. lerobot discovers plugins by calling
+# .startswith("lerobot_env_") on the raw Name from importlib.metadata, which
+# preserves whatever is declared here. A hyphenated name is never discovered.
+name = "lerobot_env_so101"
+version = "0.1.0"
+description = "SO-101 pick-cube MuJoCo gymnasium environment, published as a lerobot_env_* plugin"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{ name = "Amane INOUE" }]
+keywords = ["mujoco", "gymnasium", "robotics", "lerobot", "so-101", "so-arm101", "reinforcement-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "mujoco>=3.0.0,<4.0.0",
+    # The <1.0.0 cap carried over from gym-hil would conflict with lerobot,
+    # which requires gymnasium 1.x.
+    "gymnasium>=0.29.1,<2.0.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.1.0"]
+
+[project.urls]
+homepage = "https://github.com/isaka1022/so101-sim2real"
+repository = "https://github.com/isaka1022/so101-sim2real"
+issues = "https://github.com/isaka1022/so101-sim2real/issues"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["lerobot_env_so101*"]
+
+[tool.setuptools.package-data]
+lerobot_env_so101 = ["assets/**/*"]

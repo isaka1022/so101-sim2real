@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# 実機ログ・生データは容量が大きい。同定結果（軽量）のみコミットする
+data/raw/
+*.mp4
+*.bag
+
+.DS_Store
+
+# menagerie は sparse checkout で取得する（README 参照）
+vendor/
+
+# Personal agent instructions (kept local, not published)
+AGENTS.md
+CLAUDE.md
