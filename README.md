@@ -86,6 +86,15 @@ cd vendor/menagerie && git sparse-checkout set robotstudio_so101 trs_so_arm100
 .venv/bin/python sim/inspect_model.py
 ```
 
+## Roadmap / ロードマップ
+
+Priorities (gripper unit mapping, denser rewards, `place`/`stack` tasks) and
+the planned Phase 2 real-robot system identification are in
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+優先事項（グリッパ単位変換・reward shaping・place/stack タスク）と、予定している
+Phase 2（実機の system identification）は [`docs/ROADMAP.md`](docs/ROADMAP.md) にまとめています。
+
 ## Layout / ディレクトリ
 
 ```
