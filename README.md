@@ -9,7 +9,7 @@ A MuJoCo simulation environment for the SO-101 arm (SO-ARM101), shipped as a
 SO-101（通称 SO-ARM101）の MuJoCo シミュレーション環境。
 [lerobot](https://github.com/huggingface/lerobot) のサードパーティプラグインとして公開している。
 
-![SO-101 pick-cube environment](docs/media/so101_pick_cube.png)
+![SO-101 pick-cube environment](docs/media/so101_pick_cube.gif)
 
 ## The package / パッケージ
 

@@ -10,7 +10,7 @@ A standalone SO-101 (SO-ARM101) pick-cube MuJoCo environment, packaged as a
 [lerobot#3823](https://github.com/huggingface/lerobot/pull/3823)) and usable
 standalone as a plain `gymnasium` environment.
 
-![SO-101 pick-cube environment](https://raw.githubusercontent.com/isaka1022/so101-sim2real/main/docs/media/so101_pick_cube.png)
+![SO-101 pick-cube environment](https://raw.githubusercontent.com/isaka1022/so101-sim2real/main/docs/media/so101_pick_cube.gif)
 
 ## Installation
 
