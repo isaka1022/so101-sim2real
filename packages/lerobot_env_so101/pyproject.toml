@@ -3,7 +3,7 @@
 # .startswith("lerobot_env_") on the raw Name from importlib.metadata, which
 # preserves whatever is declared here. A hyphenated name is never discovered.
 name = "lerobot_env_so101"
-version = "0.1.0"
+version = "0.1.1"
 description = "SO-101 pick-cube MuJoCo gymnasium environment, published as a lerobot_env_* plugin"
 readme = "README.md"
 license = "Apache-2.0"
