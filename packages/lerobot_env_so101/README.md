@@ -171,16 +171,20 @@ on why this became a standalone package instead of an upstream PR.
 
 ## Known limitations
 
-- **Action deltas are unscaled.** An action component of magnitude 1.0 is
-  added directly to the end-effector target as 1.0 metres, while the
-  reachable workspace spans at most 0.6 m. Actions beyond roughly +/-0.2
-  saturate against the workspace bounds within a single 0.1 s control step,
-  so over most of the declared [-1, 1] range the action behaves closer to
-  bang-bang than to a proportional delta. This is inherited from gym-hil,
-  where actions come from human teleoperation and are naturally small; it is
-  a poor fit for an RL policy sampling uniformly from the action space.
-  Callers training policies should scale their outputs down. A configurable
-  action scale is under consideration for a future version.
+- **Action deltas default to unscaled metres.** With the default
+  `action_scale=1.0`, an action component of magnitude 1.0 is added directly
+  to the end-effector target as 1.0 metres, while the reachable workspace
+  spans at most 0.6 m — over most of the declared [-1, 1] range the action
+  behaves closer to bang-bang than to a proportional delta. This default is
+  inherited from gym-hil, where actions come from human teleoperation and are
+  naturally small. Since v0.1.1, pass `action_scale` (metres per unit action;
+  position deltas only, the grasp increment is unaffected) to make the full
+  [-1, 1] range meaningful for an RL policy:
+
+  ```python
+  env = gym.make("lerobot_env_so101/SO101PickCube-v0", action_scale=0.025)
+  # or on the lerobot CLI: --env.type=so101 --env.action_scale=0.025
+  ```
 - **`SO101GymEnv` is a base class, not a usable environment.** It implements
   robot control but not `step()`/`reset()`; instantiate `SO101PickCubeGymEnv`
   (or `gym.make("lerobot_env_so101/SO101PickCube-v0")`) instead.

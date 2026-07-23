@@ -162,12 +162,17 @@ class SO101GymEnv(MujocoGymEnv):
         image_obs: bool = False,
         home_position: np.ndarray = HOME_POSITION,
         cartesian_bounds: np.ndarray = CARTESIAN_BOUNDS,
+        action_scale: float = 1.0,
     ):
         if xml_path is None:
             xml_path = ASSETS_DIR / "pick_scene.xml"
 
+        if action_scale <= 0.0:
+            raise ValueError(f"action_scale must be positive, got {action_scale}")
+
         self._home_position = home_position
         self._cartesian_bounds = cartesian_bounds
+        self._action_scale = action_scale
 
         super().__init__(
             xml_path=xml_path,
@@ -238,11 +243,19 @@ class SO101GymEnv(MujocoGymEnv):
         self._last_action_was_zero = False
 
     def apply_action(self, action):
-        """Apply a native 4-dim action ``[dx, dy, dz, grasp]`` via position IK."""
+        """Apply a native 4-dim action ``[dx, dy, dz, grasp]`` via position IK.
+
+        Position deltas are multiplied by ``action_scale`` (metres per unit
+        action); the grasp command is already a normalized [0, 1] increment and
+        is not scaled.
+        """
         x, y, z, grasp_command = action
 
-        delta = np.asarray([x, y, z])
-        action_is_zero = np.linalg.norm(delta) < _ZERO_ACTION_TOLERANCE
+        # Zero-action detection uses the raw input so the hold-position
+        # behaviour does not depend on the configured scale.
+        raw_delta = np.asarray([x, y, z])
+        action_is_zero = np.linalg.norm(raw_delta) < _ZERO_ACTION_TOLERANCE
+        delta = raw_delta * self._action_scale
 
         # On transition from motion to hold, lock the target to the current position
         # instead of the last accumulated (and possibly overshot) target.

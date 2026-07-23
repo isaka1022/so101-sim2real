@@ -58,6 +58,7 @@ class SO101PickCubeGymEnv(SO101GymEnv):
         image_obs: bool = False,
         reward_type: str = "sparse",
         random_block_position: bool = False,
+        action_scale: float = 1.0,
     ):
         self.reward_type = reward_type
 
@@ -70,6 +71,7 @@ class SO101PickCubeGymEnv(SO101GymEnv):
             image_obs=image_obs,
             home_position=HOME_POSITION,
             cartesian_bounds=CARTESIAN_BOUNDS,
+            action_scale=action_scale,
         )
 
         self._block_z = self._model.geom("block").size[2]

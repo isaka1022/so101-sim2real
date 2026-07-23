@@ -138,6 +138,35 @@ def test_lifting_the_block_without_grasping_it_is_not_success():
     env.close()
 
 
+def test_action_scale_scales_position_deltas():
+    """The IK target must advance by scale * delta per step.
+
+    The end-effector state itself is rate-limited by IK tracking, so the
+    contract is asserted on the accumulated target, not on the resulting
+    motion.
+    """
+
+    def target_travel_x(scale: float) -> float:
+        env = gym.make(ENV_ID, action_scale=scale).unwrapped
+        env.reset(seed=SEED)
+        start = env._target_ee_pos.copy()
+        for _ in range(2):
+            env.step(np.array([0.04, 0.0, 0.0, 0.0], dtype=np.float32))
+        end = env._target_ee_pos.copy()
+        env.close()
+        return float(end[0] - start[0])
+
+    full = target_travel_x(1.0)
+    half = target_travel_x(0.5)
+    assert full == pytest.approx(2 * 0.04)
+    assert half == pytest.approx(2 * 0.04 * 0.5)
+
+
+def test_action_scale_must_be_positive():
+    with pytest.raises(ValueError, match="action_scale"):
+        gym.make(ENV_ID, action_scale=0.0)
+
+
 @pytest.mark.skipif(importlib.util.find_spec("lerobot") is None, reason="lerobot not installed")
 def test_lerobot_discovers_this_plugin():
     """Guards the distribution name.

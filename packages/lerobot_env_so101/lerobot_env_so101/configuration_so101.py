@@ -52,6 +52,7 @@ class SO101Env(EnvConfig):
     render_mode: str = "rgb_array"
     reward_type: str = "sparse"
     random_block_position: bool = False
+    action_scale: float = 1.0
     features: dict[str, PolicyFeature] = field(
         default_factory=lambda: {
             ACTION: PolicyFeature(type=FeatureType.ACTION, shape=(ACTION_DIM,)),
@@ -81,5 +82,6 @@ class SO101Env(EnvConfig):
             "render_mode": self.render_mode,
             "reward_type": self.reward_type,
             "random_block_position": self.random_block_position,
+            "action_scale": self.action_scale,
             "max_episode_steps": self.episode_length,
         }
