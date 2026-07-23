@@ -1,0 +1,26 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    env:
+      MUJOCO_GL: osmesa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install headless rendering deps
+        run: sudo apt-get update && sudo apt-get install -y libosmesa6
+      - name: Install package
+        run: pip install -e "packages/lerobot_env_so101[test]"
+      - name: Run tests
+        run: pytest packages/lerobot_env_so101/tests -q
