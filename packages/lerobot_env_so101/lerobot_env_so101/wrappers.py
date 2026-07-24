@@ -36,6 +36,8 @@ class SevenDofToFourDofAdapter(gym.ActionWrapper):
     actions ``[dx, dy, dz, drx, dry, drz, grasp]``. SO-101 environments take a
     native 4-dim ``[dx, dy, dz, grasp]``; this wrapper discards the orientation
     deltas (indices 3-5), which the position-only IK controller cannot act on.
+    ``grasp`` is passed through unchanged, so its meaning follows the wrapped
+    env's convention (an absolute target in [0, 1], 0=closed/1=open).
 
     Wrap a native SO101GymEnv-based env to accept 7-dim actions from existing
     teleop/HIL code; new code should prefer the native 4-dim action space.
