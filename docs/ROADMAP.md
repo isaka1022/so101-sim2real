@@ -6,11 +6,25 @@ so the ordering is a priority list, not a schedule.
 
 ## Near-term (sim, v0.1.x → v0.2.x)
 
-- **Gripper unit mapping.** Add a mapping layer between LeRobot's linear
-  gripper convention (`0` closed / `100` open) and the MJCF's native radian
-  range. Today they are mismatched (see the package README's *Known
-  limitations*), which makes grasping unreliable — this is the highest-value
-  fix for actually training pick policies.
+- **Gripper unit mapping. Done (v0.2.0).** `grasp` is now an absolute,
+  normalized `[0, 1]` command (0=closed, 1=open), mapped onto the MJCF's
+  native radian `ctrlrange` by `gripper.normalized_to_ctrl` — see the package
+  README's *Action space* section. Breaking change: `grasp` was previously a
+  normalized increment, not an absolute target.
+- **Orientation-aware IK for top-down grasp.** The gripper's fixed jaw
+  (including the wrist_roll_follower mesh in the wrist servo bracket) hits
+  the block before the moving jaw can descend far enough to straddle it. A
+  correct vertical-approach grasp pose exists kinematically, but the
+  position-only IK converges monotonically from HOME onto a different
+  solution branch (approach axis tilted ~36° from vertical) and never
+  reaches it — this is a limitation of solving for position only, not a
+  workspace/reachability issue. Two candidate designs, both scoped to
+  `ik_control.py` at roughly 50-100 lines:
+  - (a) Add an orientation target to the IK objective and fix the approach
+    axis pointing straight down, so the solver only searches yaw/position.
+  - (b) Branch-aware multi-seed IK: solve from several seed
+    configurations and select the solution branch that reaches the
+    vertical-approach pose, instead of always continuing from HOME.
 - **Denser reward shaping.** The default is `sparse`; a well-shaped `dense`
   reward (reach → align → grasp → lift) would make RL from scratch tractable.
 - **Revisit the default action scale.** `action_scale` landed in v0.1.1 with a

@@ -27,11 +27,11 @@ MJCF/URDF and meshes ported from
   `so101_new_calib.xml` (see the "Additional joints_properties.xml" comment there) and no XML
   file includes it separately — it was dead weight in the upstream repo.
 
-## Known unresolved issue: gripper unit mismatch
+## Gripper unit mapping (fixed in v0.2.0)
 
 In LeRobot, the gripper is represented as a linear joint where `0` = fully closed and `100` =
-fully open. The MJCF/URDF gripper joint here uses a different range
-(`ctrlrange="-0.17453 1.74533"`, radians) and this mapping is **not reflected** in the model.
-This is inherited from the upstream port, which documented it as an open issue rather than
-fixing it. Not fixed in this package either — flagged here so it isn't rediscovered from
-scratch.
+fully open. The MJCF/URDF gripper joint here uses a different native range
+(`ctrlrange="-0.17453 1.74533"`, radians). This was inherited unmapped from the upstream port
+through v0.1.x. As of v0.2.0, `lerobot_env_so101.gripper.normalized_to_ctrl` maps a normalized
+`[0, 1]` (0=closed, 1=open) command onto this native `ctrlrange`; see the package README's
+*Action space* section for how the env's `grasp` action uses it.

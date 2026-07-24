@@ -87,6 +87,13 @@ env = SevenDofToFourDofAdapter(gym.make("lerobot_env_so101/SO101PickCube-v0"))
 
 The native action space is **4-dim**: `[dx, dy, dz, grasp]`.
 
+- `dx, dy, dz` (bounds `[-1, 1]`): end-effector position **deltas**, scaled by
+  `action_scale` (see *Known limitations* below).
+- `grasp` (bounds `[0, 1]`): an **absolute** gripper target, not a delta —
+  `0` = fully closed, `1` = fully open, written directly to the gripper
+  actuator each step (`gripper.normalized_to_ctrl`). Since v0.2.0; before that
+  it was a normalized increment added to the current position each step.
+
 SO-101's arm has 5 DOF (6 joints, one of which is the gripper), and the IK
 controller in this package only solves for end-effector *position*. A 6-dim
 Cartesian pose target (position + orientation) is not something this
@@ -133,13 +140,14 @@ on why this became a standalone package instead of an upstream PR.
   (`self._target_ee_pos`), not a MuJoCo mocap body. This package removes the
   mocap writes from `reset_robot()` and removes the corresponding unused
   `mocap="true"` `target` body from `pick_scene.xml`.
-- **Not fixed, inherited as-is: gripper unit mismatch.** LeRobot represents
-  the gripper as a linear joint (`0` = closed, `100` = open). The MJCF/URDF
-  gripper joint here still uses its native radian range
-  (`ctrlrange="-0.17453 1.74533"`) with no mapping layer. This was already an
-  open issue in the upstream assets (documented in the original
-  `assets/SO101/README.md`); it is reproduced in
-  `lerobot_env_so101/assets/README.md` here rather than silently dropped.
+- **Fixed (v0.2.0): gripper is now an absolute, normalized command.** The
+  `grasp` action is a normalized `[0, 1]` (0=closed, 1=open) absolute target,
+  mapped to the gripper actuator's native radian `ctrlrange` by
+  `gripper.normalized_to_ctrl` — see *Action space* above. **Breaking
+  change**: before v0.2.0, `grasp` was a normalized increment added to the
+  current gripper position each step, so `grasp=0` meant "no change"; as of
+  v0.2.0 it means "fully closed". This does not by itself make LeRobot policy
+  training pick up the new convention — see *Known limitations* below.
 - **Not fixed, inherited as-is: unverified motor parameters.** `damping` /
   `frictionloss` / `armature` for the STS3215 servos are carried over
   unchanged from the upstream MJCF, which itself adapted them from the
@@ -178,7 +186,7 @@ on why this became a standalone package instead of an upstream PR.
   behaves closer to bang-bang than to a proportional delta. This default is
   inherited from gym-hil, where actions come from human teleoperation and are
   naturally small. Since v0.1.1, pass `action_scale` (metres per unit action;
-  position deltas only, the grasp increment is unaffected) to make the full
+  position deltas only, `grasp` is absolute and unaffected) to make the full
   [-1, 1] range meaningful for an RL policy:
 
   ```python
@@ -188,6 +196,23 @@ on why this became a standalone package instead of an upstream PR.
 - **`SO101GymEnv` is a base class, not a usable environment.** It implements
   robot control but not `step()`/`reset()`; instantiate `SO101PickCubeGymEnv`
   (or `gym.make("lerobot_env_so101/SO101PickCube-v0")`) instead.
+- **Top-down grasp is not currently reachable.** The gripper's fixed jaw
+  (including the wrist_roll_follower mesh in the wrist servo bracket) hits
+  the block's top face before the moving jaw can descend far enough to
+  straddle it. A correct grasp pose — approaching vertically, gripper
+  straddling the block — does exist kinematically, but the position-only IK
+  in this package tracks a continuous Cartesian path from the HOME pose and
+  converges monotonically onto a different solution branch (approach axis
+  tilted roughly 36° from vertical) instead. Reaching the vertical-approach
+  branch requires orientation-aware IK (see `docs/ROADMAP.md`); it is not
+  implemented here.
+- **LeRobot policy training does not automatically pick up the new grasp
+  convention.** LeRobot's policy eval does not read a gym env's
+  `action_space` bounds; it scales actions using the training dataset's own
+  normalization statistics. Making `grasp` absolute and `[0, 1]` (this
+  section, above) is correct for this package as a plain gym/RL environment,
+  but a LeRobot policy will only actually train against this convention if
+  its dataset was collected/labeled that way.
 
 ## Attribution
 
