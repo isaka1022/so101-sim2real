@@ -12,6 +12,8 @@ standalone as a plain `gymnasium` environment.
 
 ![SO-101 pick-cube environment](https://raw.githubusercontent.com/isaka1022/so101-sim2real/main/docs/media/so101_pick_cube.gif)
 
+*A hand-written controller driving a reach→gripper-close motion — not a successful pick-and-lift. A top-down grasp is not yet reachable with the position-only IK; see [Known limitations](#known-limitations).*
+
 ## Installation
 
 ```bash

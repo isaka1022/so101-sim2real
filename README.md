@@ -11,6 +11,8 @@ SO-101（通称 SO-ARM101）の MuJoCo シミュレーション環境。
 
 ![SO-101 pick-cube environment](docs/media/so101_pick_cube.gif)
 
+*手書きコントローラによる reach→gripper close のモーションデモ（掴み上げの成功例ではない）。真上からの把持は現状 IK が未対応 — [Known limitations](packages/lerobot_env_so101/README.md#known-limitations) 参照。*
+
 ## The package / パッケージ
 
 The installable artifact of this repo is
