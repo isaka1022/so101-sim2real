@@ -43,6 +43,11 @@ class SO101Env(EnvConfig):
     IK controller solves for end-effector position only, so there are no
     orientation deltas to command. See ``wrappers.SevenDofToFourDofAdapter`` to
     drive this env from 7-dim teleop tooling.
+
+    ``grasp`` is an absolute target in [0, 1] (0=closed, 1=open); see
+    ``SO101GymEnv.apply_action``. lerobot does not rescale policy actions
+    against a gym env's ``action_space``, so no config change is needed here
+    beyond this being the convention a policy's training data must follow.
     """
 
     task: str | None = "SO101PickCube-v0"

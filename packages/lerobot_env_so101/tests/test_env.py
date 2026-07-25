@@ -23,6 +23,7 @@ import pytest
 from gymnasium.utils.env_checker import check_env
 
 import lerobot_env_so101  # noqa: F401  registers the gym env
+from lerobot_env_so101 import gripper
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
 ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
@@ -165,6 +166,70 @@ def test_action_scale_scales_position_deltas():
 def test_action_scale_must_be_positive():
     with pytest.raises(ValueError, match="action_scale"):
         gym.make(ENV_ID, action_scale=0.0)
+
+
+def test_normalized_to_ctrl_endpoints_monotonic_and_clipped():
+    ctrlrange = (-0.17453, 1.74533)
+    lo, hi = ctrlrange
+    closed_ctrl = ctrlrange[0] if gripper.GRIPPER_CLOSED_AT_CTRL_LOW else ctrlrange[1]
+    open_ctrl = ctrlrange[1] if gripper.GRIPPER_CLOSED_AT_CTRL_LOW else ctrlrange[0]
+
+    assert gripper.normalized_to_ctrl(0.0, ctrlrange) == pytest.approx(closed_ctrl)
+    assert gripper.normalized_to_ctrl(1.0, ctrlrange) == pytest.approx(open_ctrl)
+
+    # Monotonic between the endpoints.
+    low_side = gripper.normalized_to_ctrl(0.25, ctrlrange)
+    high_side = gripper.normalized_to_ctrl(0.75, ctrlrange)
+    if gripper.GRIPPER_CLOSED_AT_CTRL_LOW:
+        assert low_side < high_side
+    else:
+        assert low_side > high_side
+
+    # Out-of-range input is clipped rather than extrapolated.
+    assert gripper.normalized_to_ctrl(-10.0, ctrlrange) == pytest.approx(closed_ctrl)
+    assert gripper.normalized_to_ctrl(10.0, ctrlrange) == pytest.approx(open_ctrl)
+
+    # ctrl_to_normalized is the inverse over the valid range.
+    for norm in (0.0, 0.1, 0.5, 0.9, 1.0):
+        ctrl = gripper.normalized_to_ctrl(norm, ctrlrange)
+        assert gripper.ctrl_to_normalized(ctrl, ctrlrange) == pytest.approx(norm)
+
+    assert lo < hi  # sanity: fixture ctrlrange is well-formed
+
+
+def test_gripper_absolute_maps_endpoints_to_ctrlrange():
+    """grasp=0/1 must set ctrl to the model's closed/open end, not increment it."""
+    env = gym.make(ENV_ID, image_obs=False).unwrapped
+    env.reset(seed=SEED)
+    lo, hi = env._model.actuator("gripper").ctrlrange
+    closed_ctrl = lo if gripper.GRIPPER_CLOSED_AT_CTRL_LOW else hi
+    open_ctrl = hi if gripper.GRIPPER_CLOSED_AT_CTRL_LOW else lo
+
+    env.step(np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32))
+    assert env._data.ctrl[env._gripper_ctrl_id] == pytest.approx(closed_ctrl, abs=1e-4)
+
+    env.step(np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32))
+    assert env._data.ctrl[env._gripper_ctrl_id] == pytest.approx(open_ctrl, abs=1e-4)
+
+    # Absolute target, not an increment: repeating grasp=1.0 must not overshoot
+    # past the open end (a delta implementation would clip here too, but for
+    # the wrong reason: accumulation, not a fresh absolute write each step).
+    env.step(np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32))
+    assert env._data.ctrl[env._gripper_ctrl_id] == pytest.approx(open_ctrl, abs=1e-4)
+
+    # Back to closed in a single step confirms it is not accumulating.
+    env.step(np.array([0.0, 0.0, 0.0, 0.0], dtype=np.float32))
+    assert env._data.ctrl[env._gripper_ctrl_id] == pytest.approx(closed_ctrl, abs=1e-4)
+
+    env.close()
+
+
+def test_gripper_action_space_bounds_are_zero_to_one():
+    env = gym.make(ENV_ID)
+    assert env.action_space.low[3] == pytest.approx(0.0)
+    assert env.action_space.high[3] == pytest.approx(1.0)
+    assert env.action_space.shape == (4,)
+    env.close()
 
 
 @pytest.mark.skipif(importlib.util.find_spec("lerobot") is None, reason="lerobot not installed")

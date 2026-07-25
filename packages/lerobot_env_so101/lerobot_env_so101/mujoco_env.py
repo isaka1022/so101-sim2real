@@ -35,6 +35,7 @@ import mujoco
 import numpy as np
 from gymnasium import spaces
 
+from lerobot_env_so101.gripper import normalized_to_ctrl
 from lerobot_env_so101.ik_control import ik_control
 
 _logger = logging.getLogger(__name__)
@@ -144,6 +145,10 @@ class SO101GymEnv(MujocoGymEnv):
     Action deltas are unscaled metres, inherited from gym-hil's teleoperation
     convention: an action of 1.0 saturates the workspace in a single step. See
     "Known limitations" in the README before training a policy against this.
+
+    The grasp component is an absolute target in [0, 1] (0=closed, 1=open),
+    not a delta: it is written directly to the gripper actuator's ctrl each
+    step via ``lerobot_env_so101.gripper.normalized_to_ctrl``.
     """
 
     # Declared on the class because gymnasium validates render_mode against it
@@ -227,7 +232,7 @@ class SO101GymEnv(MujocoGymEnv):
             self.observation_space = spaces.Dict(base_obs_space)
 
         self.action_space = spaces.Box(
-            low=np.asarray([-1.0, -1.0, -1.0, -1.0], dtype=np.float32),
+            low=np.asarray([-1.0, -1.0, -1.0, 0.0], dtype=np.float32),
             high=np.asarray([1.0, 1.0, 1.0, 1.0], dtype=np.float32),
             dtype=np.float32,
         )
@@ -246,8 +251,9 @@ class SO101GymEnv(MujocoGymEnv):
         """Apply a native 4-dim action ``[dx, dy, dz, grasp]`` via position IK.
 
         Position deltas are multiplied by ``action_scale`` (metres per unit
-        action); the grasp command is already a normalized [0, 1] increment and
-        is not scaled.
+        action); the grasp command is an absolute target in [0, 1]
+        (0=closed, 1=open), written directly to the gripper ctrl each step,
+        and is not scaled.
         """
         x, y, z, grasp_command = action
 
@@ -270,12 +276,7 @@ class SO101GymEnv(MujocoGymEnv):
         )
 
         gripper_range = self._model.actuator("gripper").ctrlrange
-        current_gripper = self._data.ctrl[self._gripper_ctrl_id]
-        g_norm = (current_gripper - gripper_range[0]) / (gripper_range[1] - gripper_range[0])
-        ng_norm = np.clip(g_norm + grasp_command, 0.0, 1.0)
-        self._data.ctrl[self._gripper_ctrl_id] = gripper_range[0] + ng_norm * (
-            gripper_range[1] - gripper_range[0]
-        )
+        self._data.ctrl[self._gripper_ctrl_id] = normalized_to_ctrl(grasp_command, gripper_range)
 
         for _ in range(self._n_substeps):
             tau = ik_control(
