@@ -42,8 +42,8 @@ def main(out_path: str) -> None:
             renderer.update_scene(data, camera=cam)
             frames.append(renderer.render().copy())
 
-    reach(steps=30, grasp=-1.0, gain=6.0, clip=1.0)  # descend, gripper open
-    reach(steps=12, grasp=1.0, gain=4.0, clip=0.4)  # close, hold position
+    reach(steps=30, grasp=1.0, gain=6.0, clip=1.0)  # descend, gripper open
+    reach(steps=12, grasp=0.0, gain=4.0, clip=0.4)  # close, hold position
 
     renderer.close()
     env.close()

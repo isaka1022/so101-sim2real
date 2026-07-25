@@ -26,7 +26,7 @@ import numpy as np
 # Whether the physically "closed" jaw position is the low end of the
 # actuator's ctrlrange. This is the single switch to flip if a rendering
 # check finds the polarity backwards; see the caller for how it is verified.
-GRIPPER_CLOSED_AT_CTRL_LOW: bool = True
+GRIPPER_CLOSED_AT_CTRL_LOW: bool = False
 
 
 def normalized_to_ctrl(norm: float, ctrlrange) -> float:
