@@ -31,6 +31,7 @@ test = ["pytest>=8.1.0"]
 
 [project.urls]
 homepage = "https://github.com/isaka1022/so101-sim2real"
+documentation = "https://isaka1022.github.io/so101-sim2real/"
 repository = "https://github.com/isaka1022/so101-sim2real"
 issues = "https://github.com/isaka1022/so101-sim2real/issues"
 
