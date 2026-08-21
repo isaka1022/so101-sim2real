@@ -60,6 +60,31 @@ class SO101PickCubeGymEnv(SO101GymEnv):
         random_block_position: bool = False,
         action_scale: float = 1.0,
     ):
+        """Create the pick-cube environment.
+
+        Args:
+            seed: Seed for the environment's own RNG, which drives block
+                placement when ``random_block_position`` is set.
+            control_dt: Seconds of simulated time per ``step()`` call. The
+                default of 0.1 s corresponds to 10 Hz.
+            physics_dt: MuJoCo integration timestep. ``control_dt //
+                physics_dt`` substeps are run per ``step()``.
+            render_spec: Frame height, width, and camera id used by
+                ``render()``.
+            render_mode: ``"rgb_array"`` returns frames from ``render()``;
+                ``"human"`` opens a MuJoCo viewer.
+            image_obs: Add a ``pixels.front`` camera view to the observation.
+                Note that this *replaces* ``environment_state`` rather than
+                adding to it, on the assumption that a pixel-based policy
+                should infer the block position from the image.
+            reward_type: ``"sparse"`` or ``"dense"``. Sparse mode requires both
+                a lift and the gripper being near the block.
+            random_block_position: Randomize the block position on each reset
+                instead of using a fixed pose.
+            action_scale: Metres per unit of position action. Applies to
+                ``dx, dy, dz`` only — ``grasp`` is an absolute target and is
+                unaffected. Must be positive.
+        """
         self.reward_type = reward_type
 
         super().__init__(

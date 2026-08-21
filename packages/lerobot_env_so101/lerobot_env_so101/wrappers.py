@@ -44,6 +44,19 @@ class SevenDofToFourDofAdapter(gym.ActionWrapper):
     """
 
     def __init__(self, env: gym.Env):
+        """Wrap a native 4-dim env so it accepts 7-dim actions.
+
+        Emits a :class:`UserWarning` once at construction, rather than per
+        step, so that a caller porting 7-dim code learns why the arm never
+        rotates.
+
+        Args:
+            env: An environment whose action space is a 4-dim ``Box``.
+
+        Raises:
+            ValueError: If the wrapped env's action space is not a 4-dim
+                ``Box``.
+        """
         super().__init__(env)
         # Warn once at construction, not per step: a caller porting 7-dim code
         # otherwise gets an arm that never rotates and no indication why.
@@ -66,4 +79,12 @@ class SevenDofToFourDofAdapter(gym.ActionWrapper):
         self.action_space = spaces.Box(low=low, high=high, dtype=np.float32)
 
     def action(self, action: np.ndarray) -> np.ndarray:
+        """Drop the rotation deltas from a 7-dim action.
+
+        Args:
+            action: ``[dx, dy, dz, drx, dry, drz, grasp]``.
+
+        Returns:
+            ``[dx, dy, dz, grasp]``, with indices 3-5 discarded.
+        """
         return np.asarray(action, dtype=np.float32)[_KEPT_INDICES]
