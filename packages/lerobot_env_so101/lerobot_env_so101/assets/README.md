@@ -11,7 +11,7 @@ MJCF/URDF and meshes ported from
   `sts3215` default class) are adapted from the
   [Open Duck Mini project](https://github.com/apirrone/Open_Duck_Mini), **not from measurements
   of the actual SO-101**. This is unverified upstream and unverified here — see
-  `docs/references.md` in the parent repo for the cross-check against
+  `notes/references.md` in the parent repo for the cross-check against
   `mujoco_menagerie/robotstudio_so101` (byte-identical values, same unverified lineage).
 - `so101_new_calib.xml` uses the "new calibration" convention: each joint's zero is the
   midpoint of its range. An "old calibration" variant (zero = fully extended) existed

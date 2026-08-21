@@ -21,3 +21,6 @@ vendor/
 # Personal agent instructions (kept local, not published)
 AGENTS.md
 CLAUDE.md
+
+# MkDocs build output
+/site/

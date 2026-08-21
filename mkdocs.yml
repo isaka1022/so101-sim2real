@@ -1,0 +1,80 @@
+site_name: lerobot_env_so101
+site_description: SO-101 (SO-ARM101) pick-cube MuJoCo environment, published as a lerobot_env_* plugin
+site_url: https://isaka1022.github.io/so101-sim2real/
+repo_url: https://github.com/isaka1022/so101-sim2real
+repo_name: isaka1022/so101-sim2real
+edit_uri: edit/main/docs/
+
+# Link and reference errors fail the build instead of scrolling past in CI logs.
+strict: true
+
+# Cross-page links here carry #anchors; without this they are only checked as files.
+validation:
+  anchors: warn
+  unrecognized_links: warn
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [packages/lerobot_env_so101]
+          options:
+            docstring_style: google
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+            show_root_heading: true
+            show_source: true
+            filters: ["!^_"]
+            # __init__ is filtered out by the rule above; without this merge its
+            # Args section never reaches the rendered page.
+            merge_init_into_class: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Using it with lerobot: lerobot-integration.md
+  - Action space: action-space.md
+  - Limitations and troubleshooting: limitations.md
+  - API reference: api.md
+  - Contributing:
+      - Development: contributing.md
+      - Releasing: RELEASING.md
+  - Roadmap: ROADMAP.md

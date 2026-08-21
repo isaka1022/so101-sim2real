@@ -10,6 +10,11 @@ A standalone SO-101 (SO-ARM101) pick-cube MuJoCo environment, packaged as a
 [lerobot#3823](https://github.com/huggingface/lerobot/pull/3823)) and usable
 standalone as a plain `gymnasium` environment.
 
+**[Documentation](https://isaka1022.github.io/so101-sim2real/)** —
+[getting started](https://isaka1022.github.io/so101-sim2real/getting-started/),
+[action space](https://isaka1022.github.io/so101-sim2real/action-space/),
+[API reference](https://isaka1022.github.io/so101-sim2real/api/).
+
 ![SO-101 pick-cube environment](https://raw.githubusercontent.com/isaka1022/so101-sim2real/main/docs/media/so101_pick_cube.gif)
 
 *A hand-written controller driving a reach→gripper-close motion — not a successful pick-and-lift. A top-down grasp is not yet reachable with the position-only IK; see [Known limitations](#known-limitations).*
@@ -126,7 +131,7 @@ Ported from
 [huggingface/gym-hil#36](https://github.com/huggingface/gym-hil/pull/36) /
 [#37](https://github.com/huggingface/gym-hil/pull/37) and self-closed by the
 author without review. Authored by **Paul Loh** (github.com/lohpaul9). See
-the parent repo's `README.md` and `docs/references.md` for the full context
+the parent repo's `README.md` and `notes/references.md` for the full context
 on why this became a standalone package instead of an upstream PR.
 
 - **Action space narrowed from 7-dim to native 4-dim** (see above). The
@@ -155,7 +160,7 @@ on why this became a standalone package instead of an upstream PR.
   unchanged from the upstream MJCF, which itself adapted them from the
   [Open Duck Mini project](https://github.com/apirrone/Open_Duck_Mini) rather
   than measuring the actual SO-101. See the parent repo's
-  `docs/references.md` for the cross-check against
+  `notes/references.md` for the cross-check against
   `mujoco_menagerie/robotstudio_so101` (same values, same unverified
   lineage). System identification is out of scope for this package (see the
   parent repo's Phase 2 notes).

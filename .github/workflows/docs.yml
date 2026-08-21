@@ -1,0 +1,29 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # mkdocstrings reads the package statically via griffe, so mujoco and the
+      # package itself are not needed here.
+      - name: Install docs dependencies
+        run: pip install -r requirements-docs.txt
+      - name: Build
+        run: mkdocs build --strict
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: mkdocs gh-deploy --force

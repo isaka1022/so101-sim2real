@@ -55,6 +55,12 @@ _IK_ITERATIONS = 20
 
 @dataclass(frozen=True)
 class GymRenderingSpec:
+    """Offscreen frame size and camera used for rendering.
+
+    ``camera_id`` of ``-1`` selects MuJoCo's free camera; pass a camera name
+    from the MJCF (for example ``"front"``) to render a fixed view.
+    """
+
     height: int = 128
     width: int = 128
     camera_id: str | int = -1
@@ -62,7 +68,12 @@ class GymRenderingSpec:
 
 
 class MujocoGymEnv(gym.Env):
-    """MujocoEnv with gym interface."""
+    """A MuJoCo model wrapped in the gymnasium interface.
+
+    Owns the model, data, and renderer, and derives the number of physics
+    substeps per control step. Robot-specific control and the task loop belong
+    to subclasses.
+    """
 
     def __init__(
         self,
@@ -72,6 +83,17 @@ class MujocoGymEnv(gym.Env):
         physics_dt: float = 0.002,
         render_spec: GymRenderingSpec = GymRenderingSpec(),  # noqa: B008
     ):
+        """Load an MJCF model and configure the simulation timestep.
+
+        Args:
+            xml_path: Path to the MJCF scene.
+            seed: Seed for ``random_state``.
+            control_dt: Seconds of simulated time per control step.
+            physics_dt: MuJoCo integration timestep. The number of substeps per
+                control step is ``control_dt // physics_dt``.
+            render_spec: Frame height, width, and camera id used by
+                ``render()``.
+        """
         self._model = mujoco.MjModel.from_xml_path(xml_path.as_posix())
         self._model.vis.global_.offwidth = render_spec.width
         self._model.vis.global_.offheight = render_spec.height
@@ -83,7 +105,13 @@ class MujocoGymEnv(gym.Env):
         self._viewer: Optional[mujoco.Renderer] = None
         self._render_specs = render_spec
 
-    def render(self):
+    def render(self) -> np.ndarray:
+        """Render one offscreen frame.
+
+        Returns:
+            An ``(height, width, 3)`` ``uint8`` array from the configured
+            camera.
+        """
         if self._viewer is None:
             self._viewer = mujoco.Renderer(
                 model=self._model,
@@ -169,6 +197,29 @@ class SO101GymEnv(MujocoGymEnv):
         cartesian_bounds: np.ndarray = CARTESIAN_BOUNDS,
         action_scale: float = 1.0,
     ):
+        """Create the SO-101 base environment.
+
+        Args:
+            xml_path: MJCF scene to load. Defaults to the bundled
+                ``pick_scene.xml``.
+            seed: Seed for the environment's RNG.
+            control_dt: Seconds of simulated time per control step.
+            physics_dt: MuJoCo integration timestep.
+            render_spec: Frame height, width, and camera id used by
+                ``render()``.
+            render_mode: ``"rgb_array"`` or ``"human"``.
+            image_obs: Whether the task subclass should include a camera view
+                in its observation.
+            home_position: Arm joint configuration applied by
+                ``reset_robot()``.
+            cartesian_bounds: ``(2, 3)`` array of min/max end-effector target
+                positions. The IK target is clipped to this box every step.
+            action_scale: Metres per unit of position action. Must be
+                positive.
+
+        Raises:
+            ValueError: If ``action_scale`` is not positive.
+        """
         if xml_path is None:
             xml_path = ASSETS_DIR / "pick_scene.xml"
 
@@ -238,7 +289,13 @@ class SO101GymEnv(MujocoGymEnv):
         )
 
     def reset_robot(self):
-        """Reset the robot to home position."""
+        """Reset the arm to the home position and resynchronize the IK target.
+
+        The IK target (``_target_ee_pos``) is an accumulated Python attribute
+        rather than a MuJoCo body, so it must be re-read from the end-effector
+        sensor here; otherwise it would still hold the target from before the
+        reset.
+        """
         self._data.qpos[self._arm_dof_ids] = self._home_position
         self._data.ctrl[self._arm_ctrl_ids] = 0.0
         mujoco.mj_forward(self._model, self._data)
@@ -247,13 +304,21 @@ class SO101GymEnv(MujocoGymEnv):
         self._target_ee_pos = ee_pos.copy()
         self._last_action_was_zero = False
 
-    def apply_action(self, action):
+    def apply_action(self, action: np.ndarray) -> None:
         """Apply a native 4-dim action ``[dx, dy, dz, grasp]`` via position IK.
 
         Position deltas are multiplied by ``action_scale`` (metres per unit
         action); the grasp command is an absolute target in [0, 1]
         (0=closed, 1=open), written directly to the gripper ctrl each step,
         and is not scaled.
+
+        A near-zero position delta holds the current pose rather than the
+        accumulated target, so repeated zero actions do not drift toward an
+        overshot target.
+
+        Args:
+            action: Array of ``[dx, dy, dz, grasp]``. Position deltas are
+                clipped to the environment's Cartesian bounds after scaling.
         """
         x, y, z, grasp_command = action
 
@@ -311,7 +376,7 @@ class SO101GymEnv(MujocoGymEnv):
         normalized = 2 * (gripper_pos - gripper_range[0]) / (gripper_range[1] - gripper_range[0]) - 1
         return np.array([normalized], dtype=np.float32)
 
-    def render(self):
+    def render(self) -> np.ndarray:
         """Render the front camera view.
 
         The renderer is built on first use: constructing it eagerly would open

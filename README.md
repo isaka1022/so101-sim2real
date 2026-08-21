@@ -9,6 +9,8 @@ A MuJoCo simulation environment for the SO-101 arm (SO-ARM101), shipped as a
 SO-101（通称 SO-ARM101）の MuJoCo シミュレーション環境。
 [lerobot](https://github.com/huggingface/lerobot) のサードパーティプラグインとして公開している。
 
+**Documentation: <https://isaka1022.github.io/so101-sim2real/>**
+
 ![SO-101 pick-cube environment](docs/media/so101_pick_cube.gif)
 
 *手書きコントローラによる reach→gripper close のモーションデモ（掴み上げの成功例ではない）。真上からの把持は現状 IK が未対応 — [Known limitations](packages/lerobot_env_so101/README.md#known-limitations) 参照。*
@@ -104,7 +106,8 @@ packages/lerobot_env_so101/   The pip-installable plugin / pip で入る本体
 sim/     Environment tooling and model inspection / 環境実装とモデル検査ツール
 sysid/   System identification (Phase 2, not started) / 同定スクリプト（未着手）
 data/    Real-robot logs (Phase 2, not started) / 実機ログ（未着手）
-docs/    Reference notes and baselines / 参照資料・ベースライン記録
+docs/    Documentation site source (published) / ドキュメントサイトのソース（公開）
+notes/   Internal reference notes and baselines / 内部の参照資料・ベースライン記録
 vendor/  Sparse checkouts of external repos (gitignored) / 外部リポジトリ（gitignore 済み）
 ```
 

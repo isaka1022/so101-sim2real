@@ -42,7 +42,7 @@ so the ordering is a priority list, not a schedule.
 Measuring the SO-101's actual physics to replace the currently unverified
 motor parameters (`damping` / `frictionloss` / `armature`, carried over from
 the upstream MJCF, which itself borrowed them from an unrelated robot — see
-`docs/references.md`).
+`notes/references.md`).
 
 - **Status:** planned. Start date is undecided; it requires recording real
   trajectories on hardware, which is a separate effort from the sim work above.

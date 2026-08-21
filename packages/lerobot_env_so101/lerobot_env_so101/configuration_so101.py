@@ -75,13 +75,17 @@ class SO101Env(EnvConfig):
 
     @property
     def package_name(self) -> str:
-        # The base class would derive "gym_so101" from the choice name, which is
-        # not this distribution. gym_id is built from this, so it must match the
-        # namespace passed to gym.register in __init__.
+        """Distribution name used to build ``gym_id``.
+
+        The base class would derive ``"gym_so101"`` from the choice name, which
+        is not this distribution. It must match the namespace passed to
+        ``gym.register`` in ``__init__``.
+        """
         return "lerobot_env_so101"
 
     @property
     def gym_kwargs(self) -> dict:
+        """Config fields forwarded to ``gym.make``."""
         return {
             "image_obs": self.image_obs,
             "render_mode": self.render_mode,
