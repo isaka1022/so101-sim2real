@@ -65,6 +65,20 @@ The build runs with `strict: true`, so a broken internal link or a bad
 The API reference is generated from docstrings, so keep them in Google style
 with an `Args:` section — that is what renders as the argument table.
 
+### Colour tokens
+
+`--so-amber` and `--so-cube` in `docs/stylesheets/extra.css` are the raw colours
+sampled from the environment's render. They are legible on the dark surface they
+came from and **not** on the light one, so nothing that carries meaning should
+reference them directly. Text and graphics go through the per-scheme tokens —
+`--so-accent`, `--so-graph`, `--so-dead-hatch`, `--so-dead-label` — which are set
+to measured ratios and annotated with them inline.
+
+If you change an accent, measure it against `--md-default-bg-color` in **both**
+schemes: 4.5:1 for text, 3:1 for graphical objects such as the axis bars. Reading
+a screenshot is not enough — amber on the light background looks fine and scores
+1.76:1.
+
 !!! note "`docs/` is published, `notes/` is not"
 
     `docs/` is the site's source directory: everything in it ships. Internal
