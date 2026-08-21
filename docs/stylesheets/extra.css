@@ -3,8 +3,6 @@
    and the SO-101 arm's yellow. Nothing here is a stock accent colour.
    ========================================================================== */
 
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap");
-
 :root {
   --so-floor:  #3d6b99;  /* MuJoCo ground plane */
   --so-amber:  #e8b424;  /* SO-101 arm */
@@ -19,16 +17,26 @@
 
 /* Material theme bindings ------------------------------------------------- */
 
+/* --so-amber and --so-cube above are the raw sampled colours: correct on the
+   dark surface they were sampled from, unreadable on paper. Anything carrying
+   meaning as text or as a graphic goes through the per-scheme tokens below,
+   which are set to measured WCAG ratios (text >= 4.5:1, graphics >= 3:1). */
+
 [data-md-color-scheme="default"] {
   --md-primary-fg-color:        #2b4f74;
   --md-primary-fg-color--light: var(--so-floor);
   --md-primary-fg-color--dark:  #1d3550;
-  --md-accent-fg-color:         #a8761a;
+  --md-accent-fg-color:         #8a6a0f;
   --md-default-bg-color:        var(--so-paper);
+  --md-code-bg-color:           #e4e9ef;
   --md-typeset-a-color:         #2b6099;
   --so-rule:      #d3dae2;
   --so-surface:   #ffffff;
   --so-muted:     #5a6b7d;
+  --so-accent:     #8a6a0f;  /* 4.67:1 on paper */
+  --so-graph:      #9d7810;  /* 3.78:1 */
+  --so-dead-hatch: #6c8dac;  /* 3.21:1 */
+  --so-dead-label: #912758;  /* 7.36:1 */
 }
 
 [data-md-color-scheme="slate"] {
@@ -36,10 +44,15 @@
   --md-primary-fg-color--light: var(--so-floor);
   --md-accent-fg-color:         var(--so-amber);
   --md-default-bg-color:        var(--so-abyss);
+  --md-code-bg-color:           #1a2532;
   --md-typeset-a-color:         #7fb0e0;
   --so-rule:      #26323f;
   --so-surface:   var(--so-deep);
   --so-muted:     var(--so-mist);
+  --so-accent:     var(--so-amber);  /* 9.50:1 on abyss */
+  --so-graph:      var(--so-amber);
+  --so-dead-hatch: #496783;          /* 3.07:1 */
+  --so-dead-label: var(--so-cube);   /* 4.73:1 */
 }
 
 /* Typography -------------------------------------------------------------- */
@@ -56,6 +69,7 @@
   font-size: 2.1rem;
   line-height: 1.1;
   color: var(--md-default-fg-color);
+  overflow-wrap: anywhere;
 }
 
 .md-typeset h2 {
@@ -87,7 +101,7 @@
 
 .md-typeset .hero h1 {
   margin: 0 0 0.5rem;
-  font-size: 2.6rem;
+  font-size: clamp(1.9rem, 1.2rem + 3vw, 2.6rem);
 }
 
 .hero__lead {
@@ -97,19 +111,17 @@
   color: var(--md-default-fg-color);
 }
 
-.hero__lead strong { color: var(--so-amber); font-weight: 600; }
+.hero__lead strong { color: var(--so-accent); font-weight: 600; }
 
-.md-typeset .hero__cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 1.4rem 0 0;
-  padding: 0;
-  list-style: none;
-}
+/* Markdown wraps these links in a <p>, so the buttons space themselves rather
+   than relying on a flex gap on the container. Styling keys off an explicit
+   class, not source order. */
+.md-typeset .hero__cta { margin: 1.4rem 0 0; }
+.md-typeset .hero__cta p { margin: 0; }
 
-.md-typeset .hero__cta a {
+.md-typeset .hero-cta {
   display: inline-block;
+  margin: 0 0.5rem 0.5rem 0;
   padding: 0.5rem 1.1rem;
   border: 1px solid var(--so-rule);
   border-radius: 2px;
@@ -121,12 +133,12 @@
   transition: border-color 120ms, color 120ms;
 }
 
-.md-typeset .hero__cta a:first-child {
-  border-color: var(--so-amber);
-  color: var(--so-amber);
+.md-typeset .hero-cta--primary {
+  border-color: var(--so-accent);
+  color: var(--so-accent);
 }
 
-.md-typeset .hero__cta a:hover { border-color: var(--so-floor); }
+.md-typeset .hero-cta:hover { border-color: var(--so-floor); }
 
 /* Signature: the action space drawn to scale ------------------------------ */
 
@@ -178,17 +190,19 @@
 
 .axis__kind { color: var(--so-muted); text-align: right; }
 
-.axis--absolute { --axis-color: var(--so-amber); }
-.axis--absolute .axis__kind { color: var(--so-amber); }
+.axis--absolute { --axis-color: var(--so-graph); }
+.axis--absolute .axis__kind { color: var(--so-accent); }
 
-.axis--dead { opacity: 0.45; }
+/* Opacity would drop the hatch to ~1.1:1 against either surface, which reads as
+   an empty row rather than a disabled one. */
+.axis--dead .axis__name { color: var(--so-muted); }
 .axis--dead .axis__track {
   background: repeating-linear-gradient(
-    45deg, var(--so-rule) 0 3px, transparent 3px 6px
+    45deg, var(--so-dead-hatch) 0 3px, transparent 3px 6px
   );
 }
 .axis--dead .axis__track::after { display: none; }
-.axis--dead .axis__kind { color: var(--so-cube); }
+.axis--dead .axis__kind { color: var(--so-dead-label); }
 
 .axes__caption {
   font-size: 0.68rem;
@@ -221,17 +235,19 @@
   font-family: var(--md-code-font-family, monospace);
 }
 
-.doc-contents table th:first-child,
-.doc-contents table td:first-child,
-.doc-contents table th:nth-child(2),
-.doc-contents table td:nth-child(2),
-.doc-contents table th:last-child,
-.doc-contents table td:last-child {
+.doc-contents table th:first-child:nth-last-child(4),
+.doc-contents table th:first-child:nth-last-child(4) ~ th:nth-child(2),
+.doc-contents table th:first-child:nth-last-child(4) ~ th:nth-child(4),
+.doc-contents table tr > td:first-child:nth-last-child(4),
+.doc-contents table tr > td:first-child:nth-last-child(4) ~ td:nth-child(2),
+.doc-contents table tr > td:first-child:nth-last-child(4) ~ td:nth-child(4) {
   width: 1%;
   white-space: nowrap;
 }
 
-.doc-contents table td:nth-child(3) { min-width: 20rem; }
+.doc-contents table tr > td:first-child:nth-last-child(4) ~ td:nth-child(3) {
+  min-width: 20rem;
+}
 
 .md-typeset .admonition,
 .md-typeset details {
@@ -264,4 +280,5 @@
 }
 
 .axes__scale span:nth-child(2) i:first-child { transform: none; }
+.axes__scale span:nth-child(2) i:nth-child(2) { transform: none; }
 .axes__scale span:nth-child(2) i:last-child  { transform: translateX(50%); }

@@ -14,9 +14,9 @@ inputs, and a gripper command that means what it says. Runs as a plain
 <code>gymnasium</code> environment; lerobot is optional.</p>
 
 <div class="hero__cta" markdown="1">
-<a href="getting-started/">Get started</a>
-<a href="api/">API reference</a>
-<a href="https://pypi.org/project/lerobot-env-so101/">PyPI</a>
+[Get started](getting-started.md){ .hero-cta .hero-cta--primary }
+[API reference](api.md){ .hero-cta }
+[PyPI](https://pypi.org/project/lerobot-env-so101/){ .hero-cta }
 </div>
 </div>
 
@@ -42,7 +42,7 @@ pip install lerobot-env-so101
 </div>
 </div>
 
-<p class="axes__caption">The vertical rule marks zero. For a position delta it
+<p class="axes__caption" markdown="1">The vertical rule marks zero. For a position delta it
 sits at the centre of the range; for <code>grasp</code> the same zero is the
 left edge, because it is an absolute target — 0 is fully closed, not
 "unchanged". That asymmetry is the whole action space:
@@ -63,11 +63,11 @@ the IK solver silently discarded:
 </div>
 </div>
 
-<p class="axes__caption">SO-101's 5-DOF arm cannot track a 6-DOF Cartesian pose,
+<p class="axes__caption" markdown="1">SO-101's 5-DOF arm cannot track a 6-DOF Cartesian pose,
 so a policy could spend capacity learning to depend on inputs that had zero
 effect on the simulation. Verified rather than assumed: perturbing each of the
 four remaining dimensions moves the state — 0 of 4 dead. See
-<a href="action-space/">Action space</a>.</p>
+[Action space](action-space.md).</p>
 
 ## What it looks like
 
