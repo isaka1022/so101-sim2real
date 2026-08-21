@@ -1,0 +1,284 @@
+/* ==========================================================================
+   Palette sampled from the environment's own render: the MuJoCo floor blue
+   and the SO-101 arm's yellow. Nothing here is a stock accent colour.
+   ========================================================================== */
+
+:root {
+  --so-floor:  #3d6b99;  /* MuJoCo ground plane */
+  --so-amber:  #e8b424;  /* SO-101 arm */
+  --so-cube:   #d2568f;  /* the block */
+  --so-abyss:  #0f1620;
+  --so-deep:   #16202c;
+  --so-mist:   #8fa8c0;
+  --so-paper:  #f4f6f8;
+
+  --so-display: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+}
+
+/* Material theme bindings ------------------------------------------------- */
+
+/* --so-amber and --so-cube above are the raw sampled colours: correct on the
+   dark surface they were sampled from, unreadable on paper. Anything carrying
+   meaning as text or as a graphic goes through the per-scheme tokens below,
+   which are set to measured WCAG ratios (text >= 4.5:1, graphics >= 3:1). */
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        #2b4f74;
+  --md-primary-fg-color--light: var(--so-floor);
+  --md-primary-fg-color--dark:  #1d3550;
+  --md-accent-fg-color:         #8a6a0f;
+  --md-default-bg-color:        var(--so-paper);
+  --md-code-bg-color:           #e4e9ef;
+  --md-typeset-a-color:         #2b6099;
+  --so-rule:      #d3dae2;
+  --so-surface:   #ffffff;
+  --so-muted:     #5a6b7d;
+  --so-accent:     #8a6a0f;  /* 4.67:1 on paper */
+  --so-graph:      #9d7810;  /* 3.78:1 */
+  --so-dead-hatch: #6c8dac;  /* 3.21:1 */
+  --so-dead-label: #912758;  /* 7.36:1 */
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        var(--so-deep);
+  --md-primary-fg-color--light: var(--so-floor);
+  --md-accent-fg-color:         var(--so-amber);
+  --md-default-bg-color:        var(--so-abyss);
+  --md-code-bg-color:           #1a2532;
+  --md-typeset-a-color:         #7fb0e0;
+  --so-rule:      #26323f;
+  --so-surface:   var(--so-deep);
+  --so-muted:     var(--so-mist);
+  --so-accent:     var(--so-amber);  /* 9.50:1 on abyss */
+  --so-graph:      var(--so-amber);
+  --so-dead-hatch: #496783;          /* 3.07:1 */
+  --so-dead-label: var(--so-cube);   /* 4.73:1 */
+}
+
+/* Typography -------------------------------------------------------------- */
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  font-family: var(--so-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h1 {
+  font-size: 2.1rem;
+  line-height: 1.1;
+  color: var(--md-default-fg-color);
+  overflow-wrap: anywhere;
+}
+
+.md-typeset h2 {
+  margin-top: 2.4em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--so-rule);
+}
+
+.md-header__title,
+.md-nav__title {
+  font-family: var(--so-display);
+  font-weight: 600;
+}
+
+/* Hero -------------------------------------------------------------------- */
+
+.hero {
+  margin: 0 0 3rem;
+}
+
+.hero__eyebrow {
+  font-family: var(--md-code-font-family, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--so-muted);
+  margin: 0 0 0.6rem;
+}
+
+.md-typeset .hero h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.9rem, 1.2rem + 3vw, 2.6rem);
+}
+
+.hero__lead {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  max-width: 34em;
+  color: var(--md-default-fg-color);
+}
+
+.hero__lead strong { color: var(--so-accent); font-weight: 600; }
+
+/* Markdown wraps these links in a <p>, so the buttons space themselves rather
+   than relying on a flex gap on the container. Styling keys off an explicit
+   class, not source order. */
+.md-typeset .hero__cta { margin: 1.4rem 0 0; }
+.md-typeset .hero__cta p { margin: 0; }
+
+.md-typeset .hero-cta {
+  display: inline-block;
+  margin: 0 0.5rem 0.5rem 0;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--so-rule);
+  border-radius: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 120ms, color 120ms;
+}
+
+.md-typeset .hero-cta--primary {
+  border-color: var(--so-accent);
+  color: var(--so-accent);
+}
+
+.md-typeset .hero-cta:hover { border-color: var(--so-floor); }
+
+/* Signature: the action space drawn to scale ------------------------------ */
+
+.axes {
+  margin: 0 0 1rem;
+  border-top: 1px solid var(--so-rule);
+}
+
+.axis {
+  display: grid;
+  grid-template-columns: 4.2rem 1fr 5.6rem;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--so-rule);
+  font-family: var(--md-code-font-family, monospace);
+  font-size: 0.7rem;
+}
+
+.axis__name { color: var(--md-default-fg-color); font-weight: 600; }
+
+.axis__track {
+  position: relative;
+  height: 0.55rem;
+  background: linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(var(--lo) * 1%),
+    var(--axis-color, var(--so-floor)) calc(var(--lo) * 1%),
+    var(--axis-color, var(--so-floor)) calc(var(--hi) * 1%),
+    transparent calc(var(--hi) * 1%),
+    transparent 100%
+  );
+  border-left: 1px solid var(--so-rule);
+  border-right: 1px solid var(--so-rule);
+}
+
+/* The zero mark is the whole point: it sits mid-track for a delta and at the
+   very edge for an absolute target. */
+.axis__track::after {
+  content: "";
+  position: absolute;
+  top: -0.2rem;
+  bottom: -0.2rem;
+  left: calc(var(--zero) * 1%);
+  width: 1px;
+  background: var(--md-default-fg-color);
+}
+
+.axis__kind { color: var(--so-muted); text-align: right; }
+
+.axis--absolute { --axis-color: var(--so-graph); }
+.axis--absolute .axis__kind { color: var(--so-accent); }
+
+/* Opacity would drop the hatch to ~1.1:1 against either surface, which reads as
+   an empty row rather than a disabled one. */
+.axis--dead .axis__name { color: var(--so-muted); }
+.axis--dead .axis__track {
+  background: repeating-linear-gradient(
+    45deg, var(--so-dead-hatch) 0 3px, transparent 3px 6px
+  );
+}
+.axis--dead .axis__track::after { display: none; }
+.axis--dead .axis__kind { color: var(--so-dead-label); }
+
+.axes__caption {
+  font-size: 0.68rem;
+  color: var(--so-muted);
+  margin: 0.5rem 0 2.4rem;
+}
+
+/* Code and tables --------------------------------------------------------- */
+
+.md-typeset pre > code { border-radius: 2px; }
+
+.md-typeset table:not([class]) {
+  border: 1px solid var(--so-rule);
+  border-radius: 0;
+  font-size: 0.72rem;
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--so-surface);
+  font-family: var(--so-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid var(--so-rule);
+}
+
+/* Argument tables in the generated API reference run long. Collapse the name,
+   type and default columns to their content so the description gets the room. */
+.doc-contents table td:first-child,
+.doc-contents table td:nth-child(2) {
+  font-family: var(--md-code-font-family, monospace);
+}
+
+.doc-contents table th:first-child:nth-last-child(4),
+.doc-contents table th:first-child:nth-last-child(4) ~ th:nth-child(2),
+.doc-contents table th:first-child:nth-last-child(4) ~ th:nth-child(4),
+.doc-contents table tr > td:first-child:nth-last-child(4),
+.doc-contents table tr > td:first-child:nth-last-child(4) ~ td:nth-child(2),
+.doc-contents table tr > td:first-child:nth-last-child(4) ~ td:nth-child(4) {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.doc-contents table tr > td:first-child:nth-last-child(4) ~ td:nth-child(3) {
+  min-width: 20rem;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  border-width: 0 0 0 3px;
+  border-radius: 0;
+  font-size: 0.75rem;
+}
+
+/* Axis ruler: without it the ends of the track are unlabelled and the reader
+   has to take the caption's word for the scale. */
+.axes__scale {
+  display: grid;
+  grid-template-columns: 4.2rem 1fr 5.6rem;
+  gap: 0.9rem;
+  padding-bottom: 0.3rem;
+  font-family: var(--md-code-font-family, monospace);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: var(--so-muted);
+}
+
+.axes__scale span:nth-child(2) {
+  display: flex;
+  justify-content: space-between;
+}
+
+.axes__scale span:nth-child(2) i {
+  font-style: normal;
+  transform: translateX(-50%);
+}
+
+.axes__scale span:nth-child(2) i:first-child { transform: none; }
+.axes__scale span:nth-child(2) i:nth-child(2) { transform: none; }
+.axes__scale span:nth-child(2) i:last-child  { transform: translateX(50%); }
