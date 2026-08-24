@@ -57,6 +57,48 @@ gym-hil ほか「1環境1リポジトリ」型の repo は1年以上メンテナ
 一方 lerobot にはゲートキーパー不要の公開経路（EnvHub / `lerobot_env_*`
 プラグイン自動発見）が整備された。本リポジトリは後者を使う。
 
+## Alternatives / 他の選択肢
+
+This is not the only SO-101 simulation, and its scope is deliberately narrow.
+As of 2026-08-24:
+
+- [**so101-nexus**](https://github.com/johnsutor/so101-nexus) — the closest
+  alternative. A full stack (teleoperation → imitation learning → RL) on MuJoCo
+  and MuJoCo Warp, published through EnvHub. Reach for it if you want the whole
+  training pipeline in one package, or GPU-parallel rollouts.
+- [**robot-control-stack**](https://github.com/RobotControlStack/robot-control-stack)
+  — MuJoCo Gymnasium wrappers plus real-hardware control across five arms
+  including SO-101. Reach for it if you need one API over several robots.
+  AGPL-3.0.
+- [**lerobot-sim2real**](https://github.com/StoneT2000/lerobot-sim2real) (ManiSkill),
+  [**isaac_so_arm101**](https://github.com/MuammerBay/isaac_so_arm101) and
+  [NVIDIA's SO-101 workshop](https://github.com/isaac-sim/Sim-to-Real-SO-101-Workshop)
+  (Isaac Lab) — reach for these if you have CUDA and want GPU-parallel training.
+
+This one is for a single pick-cube environment that installs with `pip`, is
+discovered by lerobot through the `lerobot_env_*` naming convention, and runs on
+Apple Silicon without a GPU. A fuller survey — stars, licenses and last-push
+dates for ten projects — is in [`notes/references.md`](notes/references.md).
+
+SO-101 のシミュレーションはこれだけではなく、本リポジトリは意図的にスコープを
+狭く取っている。2026-08-24 時点:
+
+- [**so101-nexus**](https://github.com/johnsutor/so101-nexus) — 最も近い選択肢。
+  teleop → 模倣学習 → RL を一体で提供する MuJoCo / MuJoCo Warp のスタックで、
+  EnvHub 経由で公開されている。学習パイプライン一式が欲しい、または GPU 並列で
+  回したいならこちら
+- [**robot-control-stack**](https://github.com/RobotControlStack/robot-control-stack)
+  — SO-101 を含む5種のアームを、MuJoCo Gymnasium wrapper と実機制御の統一 API で
+  扱う。複数ロボットを1つの API で回すならこちら。AGPL-3.0
+- [**lerobot-sim2real**](https://github.com/StoneT2000/lerobot-sim2real)（ManiSkill）/
+  [**isaac_so_arm101**](https://github.com/MuammerBay/isaac_so_arm101) /
+  [NVIDIA の SO-101 workshop](https://github.com/isaac-sim/Sim-to-Real-SO-101-Workshop)
+  （Isaac Lab）— CUDA があって GPU 並列学習をしたいならこちら
+
+本リポジトリが向くのは、pick-cube 環境ひとつを `pip` で入れ、`lerobot_env_*` 命名規約で
+lerobot に自動発見させ、GPU なしの Apple Silicon で動かしたい場合。★・ライセンス・
+最終 push を含む10件の一覧は [`notes/references.md`](notes/references.md) にある。
+
 ## macOS notes / macOS での注意
 
 - Runs natively on Apple Silicon: `pip install mujoco` (verified with 3.10.0)
