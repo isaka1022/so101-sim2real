@@ -427,6 +427,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-changed-vs-the-upstream-port" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -778,6 +789,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#alternatives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-changed-vs-the-upstream-port" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -955,6 +977,28 @@ while lerobot now provides gatekeeper-free publishing paths — EnvHub and
 <code>lerobot_env_*</code> plugin auto-discovery. This package uses the latter, which
 means it can be corrected and released without waiting on a review queue that
 has not been moving.</p>
+<h2 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link">&para;</a></h2>
+<p>This is not the only SO-101 simulation, and its scope is deliberately narrow.
+As of 2026-08-24:</p>
+<ul>
+<li><a href="https://github.com/johnsutor/so101-nexus"><strong>so101-nexus</strong></a> — the closest
+  alternative. A full stack (teleoperation → imitation learning → RL) on MuJoCo
+  and MuJoCo Warp, published through EnvHub. Reach for it if you want the whole
+  training pipeline in one package, or GPU-parallel rollouts.</li>
+<li><a href="https://github.com/RobotControlStack/robot-control-stack"><strong>robot-control-stack</strong></a>
+  — MuJoCo Gymnasium wrappers plus real-hardware control across five arms
+  including SO-101. Reach for it if you need one API over several robots.
+  AGPL-3.0.</li>
+<li><a href="https://github.com/StoneT2000/lerobot-sim2real"><strong>lerobot-sim2real</strong></a> (ManiSkill),
+  <a href="https://github.com/MuammerBay/isaac_so_arm101"><strong>isaac_so_arm101</strong></a> and
+  <a href="https://github.com/isaac-sim/Sim-to-Real-SO-101-Workshop">NVIDIA's SO-101 workshop</a>
+  (Isaac Lab) — reach for these if you have CUDA and want GPU-parallel training.</li>
+</ul>
+<p>This package is for a single pick-cube environment that installs with <code>pip</code>, is
+discovered by lerobot through the <code>lerobot_env_*</code> naming convention, and runs on
+Apple Silicon without a GPU. A fuller survey — stars, licenses and last-push
+dates for ten projects — is in
+<a href="https://github.com/isaka1022/so101-sim2real/blob/main/notes/references.md"><code>notes/references.md</code></a>.</p>
 <h2 id="what-changed-vs-the-upstream-port">What changed vs. the upstream port<a class="headerlink" href="#what-changed-vs-the-upstream-port" title="Permanent link">&para;</a></h2>
 <p>Ported from
 <a href="https://github.com/lohpaul9/gym-hil/tree/SO-101">lohpaul9/gym-hil <code>SO-101</code> branch</a>
