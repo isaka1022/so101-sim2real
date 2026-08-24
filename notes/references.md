@@ -1,6 +1,6 @@
 # References
 
-2026-07-20 時点で実在確認済み。
+2026-07-20 時点で実在確認済み。「既存の SO-101 sim 実装」節のみ 2026-08-24 に再調査・全面改訂。
 
 ## 公開経路（Phase 1 の出口）
 
@@ -23,6 +23,41 @@
 
 ## 既存の SO-101 sim 実装
 
+**2026-08-24 全面改訂。この分野は空白地帯ではない。**
+
+初版（2026-07-20）はここに lohpaul9 の2件しか載せていなかった。gym-hil の系譜を縦に深く辿る
+検索軸しか使わず、`so101` / `so-arm101` / `so101 mujoco` という素朴なキーワードでの
+GitHub 全文検索をしていなかったため、系譜の外にある同種の実装を丸ごと取りこぼしていた。
+AGENTS.md の3つの必須手順（closed も見る / 活動状況を測る / 他事例と比較する）は
+**すべて「見つけた対象について」の手順**で、「対象を数え漏らしていないか」を担保しない。
+
+以下は全件 `gh api repos/OWNER/NAME` の `pushed_at`（＝最終コード更新）で確認した。
+`gh search repos` の `updatedAt` は star 変動でも動くので活動指標に使わないこと。
+
+### 直接競合（MuJoCo × Gymnasium × SO-101）
+
+| リポジトリ | ★ | ライセンス | 最終push | 性質と、このリポジトリとの境界 |
+|---|---|---|---|---|
+| [johnsutor/so101-nexus](https://github.com/johnsutor/so101-nexus) | 37 | Apache-2.0 | 2026-08-17 | **最も近い競合。** `pip install so101-nexus` で入る MuJoCo + MuJoCo Warp（GPU並列）の LeRobot ベース環境。teleop / 模倣学習 / RL を一体で提供。docs サイト・Colab・CI・16リリース。PyPI 初版 **2026-06-21** で本リポジトリの初コミット（2026-07-23）より1ヶ月早い。公開経路は **EnvHub**（`hub_path="johnsutor/so101-nexus-envs"`）で、`lerobot_env_*` pip 自動発見ではない |
+| [RobotControlStack/robot-control-stack](https://github.com/RobotControlStack/robot-control-stack) | 150 | AGPL-3.0 | 2026-08-22 | ICRA 2026 論文。ROS 非依存の MuJoCo Gymnasium wrapper で Franka FR3/Panda・xArm7・UR5e・**SO101**・YAM を統一 API に。C++ バックエンド。スコープが桁違いに広く、AGPL なので取り込みは不可 |
+| [tuul-ai/so101_sim](https://github.com/tuul-ai/so101_sim) | 35 | なし | 2025-06-30 | MuJoCo の SO100/SO101 タスク集（RL/IL）。**1年以上停止**。ライセンス未指定のため参照のみ可 |
+| [masato-ka/gym-soarm](https://github.com/masato-ka/gym-soarm) | 13 | なし | 2025-09-14 | gym-aloha ベースの gymnasium 環境。マルチカメラ・3×3グリッド配置。**action space が6関節の直接角度指令**で、本リポジトリの手先デルタ4次元とは設計軸が違う。停止中 |
+| [zacamaso/mjlab_so101](https://github.com/zacamaso/mjlab_so101) | 24 | Apache-2.0 | 2026-03-10 | mjlab（MuJoCo Warp）の SO-101 向け fork |
+| [Hucheyu1/Lerobot-mujoco-sim2real](https://github.com/Hucheyu1/Lerobot-mujoco-sim2real) | 7 | なし | 2026-03-04 | 名前どおり同じ狙い。小規模・停止中 |
+
+### GPU / Isaac / ManiSkill 系（別軸だが同じ需要を取る）
+
+| リポジトリ | ★ | ライセンス | 最終push | 性質 |
+|---|---|---|---|---|
+| [StoneT2000/lerobot-sim2real](https://github.com/StoneT2000/lerobot-sim2real) | 396 | なし | 2026-06-15 | ManiSkill の GPU 並列シムで学習し zero-shot で実機へ。この分野の代表格。ManiSkill3 は SO-101 のタスクを複数同梱 |
+| [MuammerBay/isaac_so_arm101](https://github.com/MuammerBay/isaac_so_arm101) | 302 | BSD-3-Clause | 2026-02-18 | Isaac Lab の SO-ARM100/101 外部プロジェクト |
+| [aalmuzairee/squint](https://github.com/aalmuzairee/squint) | 88 | MIT | 2026-08-01 | 論文 *Squint: Fast Visual RL for Sim-to-Real*。SO-101 + ManiSkill3 の実装 |
+| [isaac-sim/Sim-to-Real-SO-101-Workshop](https://github.com/isaac-sim/Sim-to-Real-SO-101-Workshop) | 66 | Apache-2.0 | 2026-07-20 | NVIDIA 公式。Isaac Lab + GR00T |
+
+いずれも **CUDA 前提**で、Apple Silicon では動かない。
+
+### gym-hil 系譜（本リポジトリの直接の祖先）
+
 - [lohpaul9/gym-hil `SO-101` ブランチ](https://github.com/lohpaul9/gym-hil/tree/SO-101) — **Apache-2.0**（要帰属表示）。
   2,946行 / 37ファイル。assets + env クラス + 逆運動学 + teleop + IK 検証スクリプト。
   [PR #36](https://github.com/huggingface/gym-hil/pull/36)（18:34作成→18:35クローズ）/ [#37](https://github.com/huggingface/gym-hil/pull/37)（18:37作成→同分クローズ）。
@@ -32,6 +67,23 @@
   - 著者: Paul Loh（UPenn, CIS & Robotics）。アカウントは現在も活動中
 - [lohpaul9/robopicker](https://github.com/lohpaul9/robopicker) — `SO101/` ディレクトリを持つ個人リポジトリ。
   gym-hil PR 断念直後（2025-10-02 作成〜10-12 push）に作られたが以降停止。ライセンス未確認
+
+### 上の全件を踏まえて、残る差別化点
+
+**「SO-101 の MuJoCo 環境である」ことは差別化にならない。** 検証できた差分は3つだけ:
+
+1. **`lerobot_env_*` の pip 自動発見経路を実際に使っている公開パッケージが、現状これだけ。**
+   2026-08-24 に PyPI を直接叩いて確認 — `lerobot-env-so101` のみ 200、
+   `-so100` / `-pusht` / `-aloha` / `-xarm` / `-libero` / `-metaworld` / `-mikasa` / `-franka` / `-koch`
+   は全て 404。`lerobot-robot-so101` / `lerobot-teleoperator-so101` も未取得。
+   GitHub 全文検索で規約に沿う実装は他に [chomeed/lerobot_env_mikasa](https://github.com/chomeed/lerobot_env_mikasa)（0★・未公開）のみ。
+   so101-nexus は EnvHub 経路なので、この枠はまだ空いている
+2. **GPU なしで Apple Silicon 完結。** 競合の主力（so101-nexus の MuJoCo Warp / ManiSkill / Isaac）は CUDA 前提
+3. **dead action dims の発見と実測。** gym-hil 系譜を移植した者だけが踏む欠陥で、
+   他系譜の実装は最初からそこにいない。競合の有無と無関係に成立する事実
+
+1 と 2 は **「小さいニッチ」であって「空白地帯」ではない**。対外的な説明では
+「無かったから作った」ではなく「あるのは把握したうえで、この2軸が空いていたから書いた」と述べること。
 
 ## menagerie 貢献の前例（Phase 2 に進む場合）
 

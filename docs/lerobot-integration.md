@@ -74,6 +74,30 @@ while lerobot now provides gatekeeper-free publishing paths — EnvHub and
 means it can be corrected and released without waiting on a review queue that
 has not been moving.
 
+## Alternatives
+
+This is not the only SO-101 simulation, and its scope is deliberately narrow.
+As of 2026-08-24:
+
+- [**so101-nexus**](https://github.com/johnsutor/so101-nexus) — the closest
+  alternative. A full stack (teleoperation → imitation learning → RL) on MuJoCo
+  and MuJoCo Warp, published through EnvHub. Reach for it if you want the whole
+  training pipeline in one package, or GPU-parallel rollouts.
+- [**robot-control-stack**](https://github.com/RobotControlStack/robot-control-stack)
+  — MuJoCo Gymnasium wrappers plus real-hardware control across five arms
+  including SO-101. Reach for it if you need one API over several robots.
+  AGPL-3.0.
+- [**lerobot-sim2real**](https://github.com/StoneT2000/lerobot-sim2real) (ManiSkill),
+  [**isaac_so_arm101**](https://github.com/MuammerBay/isaac_so_arm101) and
+  [NVIDIA's SO-101 workshop](https://github.com/isaac-sim/Sim-to-Real-SO-101-Workshop)
+  (Isaac Lab) — reach for these if you have CUDA and want GPU-parallel training.
+
+This package is for a single pick-cube environment that installs with `pip`, is
+discovered by lerobot through the `lerobot_env_*` naming convention, and runs on
+Apple Silicon without a GPU. A fuller survey — stars, licenses and last-push
+dates for ten projects — is in
+[`notes/references.md`](https://github.com/isaka1022/so101-sim2real/blob/main/notes/references.md).
+
 ## What changed vs. the upstream port
 
 Ported from
