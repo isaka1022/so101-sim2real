@@ -4,6 +4,29 @@ Direction for `lerobot_env_so101` and the surrounding sim2real work. Dates are
 intentionally omitted — this is a personal project worked on in bounded time,
 so the ordering is a priority list, not a schedule.
 
+## What this roadmap assumes about upstream
+
+Two upstream developments will decide how much of this package stays useful.
+Rather than treat them as risks to plan around, the ordering below assumes they
+land, and moves weight toward what they do not cover.
+
+- **[lerobot#4492](https://github.com/huggingface/lerobot/pull/4492)** registers
+  SO-101 as a first-party `EnvConfig`. Open and unreviewed by the core team as
+  of 2026-09-07. Its scope is deliberately narrow — joint-space infrastructure,
+  no rewards and no tasks — so if it lands, the *foundation* moves upstream
+  while the task layer, the reward shaping, and the identified physics stay
+  here.
+- **[EnvHub](https://huggingface.co/docs/lerobot/envhub)** loads an `env.py`
+  from the Hub in one line, without packaging. Over time this erodes the value
+  of being the only package on the `lerobot_env_*` pip path — which is, today,
+  one of the three things that separate this package from the alternatives
+  (see `notes/references.md`).
+
+**Packaging is not a moat. Verified physics and real-hardware evidence are.**
+That is why Phase 2 below is not optional polish: it is the first item on this
+list that upstream cannot absorb by writing more infrastructure, because it
+requires the physical arm.
+
 ## Near-term (sim, v0.1.x → v0.2.x)
 
 - **Gripper unit mapping. Done (v0.2.0).** `grasp` is now an absolute,
@@ -49,6 +72,22 @@ the upstream MJCF, which itself borrowed them from an unrelated robot — see
 - The path exists: `mujoco_menagerie`'s CONTRIBUTING explicitly welcomes
   sysid-based realism improvements, and MuJoCo ships a `python/mujoco/sysid`
   toolkit.
+
+## Phase 3 — closing the loop the repository name promises (planned, not started)
+
+The repository is called `so101-sim2real` and currently ships only the sim half.
+
+- Train a policy in this environment, run it on the physical SO-101, and report
+  what transfers and what does not — including the gap that Phase 2's
+  identification fails to close.
+- Publish the replication recipe end to end on macOS without CUDA. Every
+  strong alternative in this space (so101-nexus's MuJoCo Warp, ManiSkill,
+  Isaac Lab) requires a CUDA GPU, so a Mac-only path is worth writing down
+  even if the results are modest.
+
+**Depends on** the orientation-aware IK above (a grasp that actually works) and
+Phase 2 (physics worth transferring from). Running it earlier would produce a
+result that says more about the unfixed IK than about sim2real.
 
 ## Non-goals
 
