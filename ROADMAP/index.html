@@ -615,6 +615,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-this-roadmap-assumes-about-upstream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this roadmap assumes about upstream
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#near-term-sim-v01x-v02x" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -641,6 +652,17 @@
     <span class="md-ellipsis">
       
         Phase 2 — real-robot system identification (planned, not started)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-closing-the-loop-the-repository-name-promises-planned-not-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 — closing the loop the repository name promises (planned, not started)
       
     </span>
   </a>
@@ -693,6 +715,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-this-roadmap-assumes-about-upstream" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this roadmap assumes about upstream
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#near-term-sim-v01x-v02x" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -719,6 +752,17 @@
     <span class="md-ellipsis">
       
         Phase 2 — real-robot system identification (planned, not started)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phase-3-closing-the-loop-the-repository-name-promises-planned-not-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3 — closing the loop the repository name promises (planned, not started)
       
     </span>
   </a>
@@ -760,6 +804,27 @@
 <p>Direction for <code>lerobot_env_so101</code> and the surrounding sim2real work. Dates are
 intentionally omitted — this is a personal project worked on in bounded time,
 so the ordering is a priority list, not a schedule.</p>
+<h2 id="what-this-roadmap-assumes-about-upstream">What this roadmap assumes about upstream<a class="headerlink" href="#what-this-roadmap-assumes-about-upstream" title="Permanent link">&para;</a></h2>
+<p>Two upstream developments will decide how much of this package stays useful.
+Rather than treat them as risks to plan around, the ordering below assumes they
+land, and moves weight toward what they do not cover.</p>
+<ul>
+<li><strong><a href="https://github.com/huggingface/lerobot/pull/4492">lerobot#4492</a></strong> registers
+  SO-101 as a first-party <code>EnvConfig</code>. Open and unreviewed by the core team as
+  of 2026-09-07. Its scope is deliberately narrow — joint-space infrastructure,
+  no rewards and no tasks — so if it lands, the <em>foundation</em> moves upstream
+  while the task layer, the reward shaping, and the identified physics stay
+  here.</li>
+<li><strong><a href="https://huggingface.co/docs/lerobot/envhub">EnvHub</a></strong> loads an <code>env.py</code>
+  from the Hub in one line, without packaging. Over time this erodes the value
+  of being the only package on the <code>lerobot_env_*</code> pip path — which is, today,
+  one of the three things that separate this package from the alternatives
+  (see <code>notes/references.md</code>).</li>
+</ul>
+<p><strong>Packaging is not a moat. Verified physics and real-hardware evidence are.</strong>
+That is why Phase 2 below is not optional polish: it is the first item on this
+list that upstream cannot absorb by writing more infrastructure, because it
+requires the physical arm.</p>
 <h2 id="near-term-sim-v01x-v02x">Near-term (sim, v0.1.x → v0.2.x)<a class="headerlink" href="#near-term-sim-v01x-v02x" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Gripper unit mapping. Done (v0.2.0).</strong> <code>grasp</code> is now an absolute,
@@ -805,6 +870,20 @@ the upstream MJCF, which itself borrowed them from an unrelated robot — see
   sysid-based realism improvements, and MuJoCo ships a <code>python/mujoco/sysid</code>
   toolkit.</li>
 </ul>
+<h2 id="phase-3-closing-the-loop-the-repository-name-promises-planned-not-started">Phase 3 — closing the loop the repository name promises (planned, not started)<a class="headerlink" href="#phase-3-closing-the-loop-the-repository-name-promises-planned-not-started" title="Permanent link">&para;</a></h2>
+<p>The repository is called <code>so101-sim2real</code> and currently ships only the sim half.</p>
+<ul>
+<li>Train a policy in this environment, run it on the physical SO-101, and report
+  what transfers and what does not — including the gap that Phase 2's
+  identification fails to close.</li>
+<li>Publish the replication recipe end to end on macOS without CUDA. Every
+  strong alternative in this space (so101-nexus's MuJoCo Warp, ManiSkill,
+  Isaac Lab) requires a CUDA GPU, so a Mac-only path is worth writing down
+  even if the results are modest.</li>
+</ul>
+<p><strong>Depends on</strong> the orientation-aware IK above (a grasp that actually works) and
+Phase 2 (physics worth transferring from). Running it earlier would produce a
+result that says more about the unfixed IK than about sim2real.</p>
 <h2 id="non-goals">Non-goals<a class="headerlink" href="#non-goals" title="Permanent link">&para;</a></h2>
 <p>Kept out of scope on purpose, to keep the package focused:</p>
 <ul>
