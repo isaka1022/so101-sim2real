@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SO-101 Browser Simulation</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --panel-bg: rgba(20, 22, 26, 0.92);
+      --panel-border: #2a2e35;
+      --text: #e6e8eb;
+      --text-dim: #9aa1ab;
+      --accent: #5ad1c9;
+      --accent-strong: #7de3db;
+      --danger: #e0715a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: row;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    #viewport {
+      position: relative;
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    #viewport canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #panel {
+      flex: 0 0 320px;
+      max-width: 320px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--panel-border);
+      overflow-y: auto;
+      padding: 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    #panel h1 {
+      font-size: 15px;
+      margin: 0 0 6px;
+      font-weight: 600;
+    }
+
+    #panel p.desc {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-dim);
+      margin: 0 0 12px;
+    }
+
+    #panel p.desc a {
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin: 16px 0 8px;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      flex: 1;
+      background: #1b1e24;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #06201d;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .joint-row {
+      margin-bottom: 12px;
+    }
+
+    .joint-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .joint-row .joint-value {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .joint-row input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-strong);
+    }
+
+    #status-line {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 16px;
+    }
+
+    #loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: var(--bg);
+      z-index: 10;
+      transition: opacity 0.25s ease;
+    }
+
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 3px solid var(--panel-border);
+      border-top-color: var(--accent);
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #loading-text {
+      font-size: 13px;
+      color: var(--text-dim);
+      text-align: center;
+      max-width: 260px;
+    }
+
+    #error-banner {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      background: rgba(224, 113, 90, 0.15);
+      border: 1px solid var(--danger);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      display: none;
+      z-index: 20;
+    }
+
+    /* Mobile: panel becomes a bottom sheet under the canvas */
+    @media (max-width: 720px) {
+      #app {
+        flex-direction: column;
+      }
+
+      #viewport {
+        flex: 1 1 55%;
+        min-height: 0;
+      }
+
+      #panel {
+        flex: 0 0 auto;
+        max-width: none;
+        max-height: 45vh;
+        border-left: none;
+        border-top: 1px solid var(--panel-border);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="viewport">
+      <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">Loading MuJoCo (~10MB WebAssembly)…</div>
+      </div>
+      <div id="error-banner"></div>
+    </div>
+    <aside id="panel">
+      <h1>SO-101 MuJoCo simulation</h1>
+      <p class="desc">
+        This is the SO-101 robot arm running MuJoCo physics directly in your
+        browser via WebAssembly. Drag the joint sliders to move the arm, or
+        drag/scroll the canvas to orbit the camera. Built on the
+        <a href="https://github.com/isaka1022/so101-sim2real/tree/main/packages/lerobot_env_so101" target="_blank" rel="noopener">lerobot-env-so101</a>
+        package.
+      </p>
+
+      <div class="section-title">Simulation</div>
+      <div class="controls-row">
+        <button id="btn-pause">Pause</button>
+        <button id="btn-reset">Reset</button>
+      </div>
+
+      <div class="section-title">Joints</div>
+      <div id="joint-list"></div>
+
+      <div id="status-line"></div>
+    </aside>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
