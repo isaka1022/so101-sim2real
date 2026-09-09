@@ -82,6 +82,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting started: getting-started.md
+  - Try it in the browser: simulator.md
   - Using it with lerobot: lerobot-integration.md
   - Action space: action-space.md
   - Limitations and troubleshooting: limitations.md
