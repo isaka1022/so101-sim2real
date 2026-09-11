@@ -27,13 +27,17 @@ That is why Phase 2 below is not optional polish: it is the first item on this
 list that upstream cannot absorb by writing more infrastructure, because it
 requires the physical arm.
 
-## Near-term (sim, v0.1.x → v0.2.x)
+## Near-term (sim, v0.1.x → v0.3.x)
 
 - **Gripper unit mapping. Done (v0.2.0).** `grasp` is now an absolute,
   normalized `[0, 1]` command (0=closed, 1=open), mapped onto the MJCF's
   native radian `ctrlrange` by `gripper.normalized_to_ctrl` — see the package
   README's *Action space* section. Breaking change: `grasp` was previously a
   normalized increment, not an absolute target.
+- **Arm position control. Done (v0.3.0).** The arm's `<position>` actuators
+  now receive the IK target joint angles on `ctrl` instead of a joint-space PD
+  torque, and the IK is solved once per control step rather than once per
+  physics substep — see *Limitations* for the failure it replaced.
 - **Orientation-aware IK for top-down grasp.** The gripper's fixed jaw
   (including the wrist_roll_follower mesh in the wrist servo bracket) hits
   the block before the moving jaw can descend far enough to straddle it. A

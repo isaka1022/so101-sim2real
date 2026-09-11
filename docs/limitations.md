@@ -43,6 +43,27 @@ normalized increment added to the current position each step, where `0` meant
 to hold it open, `0` to close. Full detail in
 [Action space](action-space.md#the-gripper-is-absolute-and-that-is-a-breaking-change).
 
+## Arm ctrl was interpreted as PD torque, not a target angle (fixed in v0.3.0)
+
+**Symptom.** Before v0.3.0, inspecting `data.ctrl` for the arm actuators after a
+step showed values far outside the declared `ctrlrange` — magnitudes past 100
+against a range of roughly ±1.7 rad. The arm still moved toward its Cartesian
+target, but the actuators were saturated rather than tracking proportionally.
+
+**Cause.** The arm actuators are `<position>` actuators in the MJCF
+(`kp="17.8"`, `forcerange="-3.35 3.35"`), so their `ctrl` is a **target joint
+angle**. The controller inherited from gym-hil computed a joint-space PD torque
+plus gravity compensation and wrote that into `ctrl` — correct for the Panda
+`<motor>` actuators it was originally written against, meaningless for a
+position actuator. MuJoCo clamps the out-of-range command, so the actuator ran
+at its force limit in whichever direction the "torque" pointed: bang-bang
+control rather than proportional tracking.
+
+**Fix.** Fixed in v0.3.0. `solve_ik` (renamed from `ik_control`) returns the
+target joint angles, and `apply_action()` writes them to the arm `ctrl`; the
+`<position>` actuators do the PD tracking themselves. The IK is solved once per
+control step and the target angle is held across the physics substeps.
+
 ## `SO101GymEnv` has no `step()` or `reset()`
 
 **Symptom.** `AttributeError` or a silently non-functional environment after

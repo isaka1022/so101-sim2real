@@ -36,7 +36,7 @@ import numpy as np
 from gymnasium import spaces
 
 from lerobot_env_so101.gripper import normalized_to_ctrl
-from lerobot_env_so101.ik_control import ik_control
+from lerobot_env_so101.ik_control import solve_ik
 
 _logger = logging.getLogger(__name__)
 
@@ -47,8 +47,6 @@ HOME_POSITION = np.zeros(len(_ARM_JOINT_NAMES), dtype=np.float64)
 CARTESIAN_BOUNDS = np.asarray([[0.1, -0.3, 0.0], [0.5, 0.3, 0.4]])
 _ZERO_ACTION_TOLERANCE = 1e-6
 
-_IK_JOINT_KP = 500.0
-_IK_JOINT_KD = 50.0
 _IK_DAMPING = 0.1
 _IK_ITERATIONS = 20
 
@@ -343,21 +341,21 @@ class SO101GymEnv(MujocoGymEnv):
         gripper_range = self._model.actuator("gripper").ctrlrange
         self._data.ctrl[self._gripper_ctrl_id] = normalized_to_ctrl(grasp_command, gripper_range)
 
+        # The arm actuators are <position>: ctrl is a target angle held across
+        # the substeps, so the IK is solved once per control step.
+        target_q = solve_ik(
+            model=self._model,
+            data=self._data,
+            site_id=self._ee_site_id,
+            dof_ids=self._arm_dof_ids,
+            target_pos=self._target_ee_pos,
+            ik_method="levenberg_marquardt",
+            ik_damping=_IK_DAMPING,
+            ik_iterations=_IK_ITERATIONS,
+        )
+        self._data.ctrl[self._arm_ctrl_ids] = target_q
+
         for _ in range(self._n_substeps):
-            tau = ik_control(
-                model=self._model,
-                data=self._data,
-                site_id=self._ee_site_id,
-                dof_ids=self._arm_dof_ids,
-                target_pos=self._target_ee_pos,
-                joint_kp=_IK_JOINT_KP,
-                joint_kd=_IK_JOINT_KD,
-                ik_method="levenberg_marquardt",
-                ik_damping=_IK_DAMPING,
-                ik_iterations=_IK_ITERATIONS,
-                gravity_comp=True,
-            )
-            self._data.ctrl[self._arm_ctrl_ids] = tau
             mujoco.mj_step(self._model, self._data)
 
     def get_robot_state(self):
