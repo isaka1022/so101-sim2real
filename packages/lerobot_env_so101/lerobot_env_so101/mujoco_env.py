@@ -353,7 +353,8 @@ class SO101GymEnv(MujocoGymEnv):
             ik_damping=_IK_DAMPING,
             ik_iterations=_IK_ITERATIONS,
         )
-        self._data.ctrl[self._arm_ctrl_ids] = target_q
+        arm_ctrlrange = self._model.actuator_ctrlrange[self._arm_ctrl_ids]
+        self._data.ctrl[self._arm_ctrl_ids] = np.clip(target_q, arm_ctrlrange[:, 0], arm_ctrlrange[:, 1])
 
         for _ in range(self._n_substeps):
             mujoco.mj_step(self._model, self._data)
