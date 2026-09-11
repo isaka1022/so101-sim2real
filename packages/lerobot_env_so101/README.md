@@ -176,8 +176,8 @@ on why this became a standalone package instead of an upstream PR.
   parent repo's Phase 2 notes).
 - **Not fixed: the arm settles below its target under gravity.** The
   proportional-only `<position>` actuators leave a steady-state gap under
-  gravity load — see
-  [Limitations](../../docs/limitations.md#the-arm-settles-below-its-target-under-gravity).
+  gravity load (about 17 mm at the end-effector in the home pose). See the
+  parent repo's `docs/limitations.md`.
 - **Dropped: teleop/gamepad/keyboard wrappers, `PassiveViewerWrapper`,
   `GripperPenaltyWrapper`, `ResetDelayWrapper`, `EEActionWrapper`,
   `InputsControlWrapper`, and the `wrap_env`/`make_env` factory.** These are
