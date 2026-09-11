@@ -497,6 +497,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arm ctrl was interpreted as PD torque, not a target angle (fixed in v0.3.0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-arm-settles-below-its-target-under-gravity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The arm settles below its target under gravity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#so101gymenv-has-no-step-or-reset" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -788,6 +810,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arm ctrl was interpreted as PD torque, not a target angle (fixed in v0.3.0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-arm-settles-below-its-target-under-gravity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The arm settles below its target under gravity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#so101gymenv-has-no-step-or-reset" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -903,6 +947,41 @@ normalized increment added to the current position each step, where <code>0</cod
 <p><strong>Fix.</strong> Command the gripper state you want rather than a change to it — <code>1</code>
 to hold it open, <code>0</code> to close. Full detail in
 <a href="../action-space/#the-gripper-is-absolute-and-that-is-a-breaking-change">Action space</a>.</p>
+<h2 id="arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030">Arm ctrl was interpreted as PD torque, not a target angle (fixed in v0.3.0)<a class="headerlink" href="#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030" title="Permanent link">&para;</a></h2>
+<p><strong>Symptom.</strong> Before v0.3.0, inspecting <code>data.ctrl</code> for the arm actuators after a
+step showed values far outside the declared <code>ctrlrange</code> — magnitudes past 100
+against a range of roughly ±1.7 rad. The arm still moved toward its Cartesian
+target, but the actuators were saturated rather than tracking proportionally.</p>
+<p><strong>Cause.</strong> The arm actuators are <code>&lt;position&gt;</code> actuators in the MJCF
+(<code>kp="17.8"</code>, <code>forcerange="-3.35 3.35"</code>), so their <code>ctrl</code> is a <strong>target joint
+angle</strong>. The controller inherited from gym-hil computed a joint-space PD torque
+plus gravity compensation and wrote that into <code>ctrl</code> — correct for the Panda
+<code>&lt;motor&gt;</code> actuators it was originally written against, meaningless for a
+position actuator. MuJoCo clamps the out-of-range command, so the actuator ran
+at its force limit in whichever direction the "torque" pointed: bang-bang
+control rather than proportional tracking.</p>
+<p><strong>Fix.</strong> Fixed in v0.3.0. <code>solve_ik</code> (renamed from <code>ik_control</code>) returns the
+target joint angles, and <code>apply_action()</code> writes them to the arm <code>ctrl</code>; the
+<code>&lt;position&gt;</code> actuators do proportional position tracking themselves (<code>kp</code>
+only; damping comes from the passive joint damping). The IK is solved once
+per control step and the target angle is held across the physics substeps.</p>
+<h2 id="the-arm-settles-below-its-target-under-gravity">The arm settles below its target under gravity<a class="headerlink" href="#the-arm-settles-below-its-target-under-gravity" title="Permanent link">&para;</a></h2>
+<p><strong>Symptom.</strong> Holding a fixed target with the zero action for 100 steps from
+the home pose leaves a steady-state gap between <code>ctrl</code> (the commanded angle)
+and <code>qpos</code> (the actual angle): shoulder_lift ≈ −0.028 rad, elbow_flex ≈
+−0.022 rad, wrist_flex ≈ −0.009 rad, shoulder_pan and wrist_roll ≈ 0 (they
+carry no gravity load at the home pose). The end-effector site settles about
+17 mm below the commanded Cartesian target.</p>
+<p><strong>Cause.</strong> The <code>&lt;position&gt;</code> actuators are proportional only (<code>kp="17.8"</code>, no
+integral term), so a joint under a constant gravity torque τ settles at a
+residual offset of τ/kp rather than closing the error to zero. The
+gravity-compensation term in the upstream controller (see the fix above) never
+actually offset this, since it was written into a position actuator's <code>ctrl</code>
+instead of applied as a torque.</p>
+<p><strong>Fix.</strong> Not fixed. Closed-loop policies that observe <code>ee_pos</code> compensate for
+it; an open-loop consumer must not assume <code>qpos == ctrl</code>. Whether the real
+STS3215 firmware has an integral term is part of the servo model verification
+in the <a href="../ROADMAP/">Roadmap</a>.</p>
 <h2 id="so101gymenv-has-no-step-or-reset"><code>SO101GymEnv</code> has no <code>step()</code> or <code>reset()</code><a class="headerlink" href="#so101gymenv-has-no-step-or-reset" title="Permanent link">&para;</a></h2>
 <p><strong>Symptom.</strong> <code>AttributeError</code> or a silently non-functional environment after
 instantiating <code>SO101GymEnv</code> directly.</p>
