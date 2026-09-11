@@ -128,6 +128,12 @@ author without review.
   0.092 m from the block (threshold 0.05 m) with the block lifted 0.20 m still
   reported success. Sparse mode now also requires the gripper to be near the
   block.
+- **Arm `ctrl` now carries IK target joint angles (v0.3.0).** The arm
+  actuators are declared `<position>` in the MJCF, so `ctrl` is a target
+  angle; upstream wrote a joint-space PD torque plus gravity compensation
+  into it, saturating the actuators into bang-bang tracking. `apply_action()`
+  now writes `solve_ik`'s target angles to `ctrl` directly. Details in
+  [Limitations](limitations.md#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030).
 
 ### Dropped
 
