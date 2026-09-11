@@ -161,9 +161,10 @@ on why this became a standalone package instead of an upstream PR.
   into it, which drove the command far outside each joint's `ctrlrange` and
   saturated the actuators into bang-bang tracking. `solve_ik` (renamed from
   `ik_control`) now returns the target joint angles and the environment writes
-  them to `ctrl`, leaving the PD tracking to the `<position>` actuators. The
-  IK is also solved once per control step rather than once per physics
-  substep, since the target angle is held across the substeps.
+  them to `ctrl`, leaving the proportional position tracking (`kp` only;
+  damping comes from the passive joint damping) to the `<position>`
+  actuators. The IK is also solved once per control step rather than once per
+  physics substep, since the target angle is held across the substeps.
 - **Not fixed, inherited as-is: unverified motor parameters.** `damping` /
   `frictionloss` / `armature` for the STS3215 servos are carried over
   unchanged from the upstream MJCF, which itself adapted them from the

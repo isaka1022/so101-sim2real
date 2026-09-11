@@ -23,8 +23,9 @@ https://github.com/huggingface/gym-hil/pull/36), authored by Paul Loh
 
 Based on: https://alefram.github.io/posts/Basic-inverse-kinematics-in-Mujoco
 Uses numerical IK to compute the target joint angles for a Cartesian target.
-The angles are written to the arm's ``<position>`` actuators, which perform the
-joint-space PD tracking themselves; this module computes no torques.
+The angles are written to the arm's ``<position>`` actuators, which perform
+proportional position tracking themselves (``kp`` only; damping comes from the
+passive joint damping); this module computes no torques.
 
 This approach avoids the problematic task-space inertia matrix and works well
 for 5-DOF planar arms like SO-101.

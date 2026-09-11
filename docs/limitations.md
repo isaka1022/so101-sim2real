@@ -61,8 +61,9 @@ control rather than proportional tracking.
 
 **Fix.** Fixed in v0.3.0. `solve_ik` (renamed from `ik_control`) returns the
 target joint angles, and `apply_action()` writes them to the arm `ctrl`; the
-`<position>` actuators do the PD tracking themselves. The IK is solved once per
-control step and the target angle is held across the physics substeps.
+`<position>` actuators do proportional position tracking themselves (`kp`
+only; damping comes from the passive joint damping). The IK is solved once
+per control step and the target angle is held across the physics substeps.
 
 ## `SO101GymEnv` has no `step()` or `reset()`
 
