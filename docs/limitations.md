@@ -65,6 +65,27 @@ target joint angles, and `apply_action()` writes them to the arm `ctrl`; the
 only; damping comes from the passive joint damping). The IK is solved once
 per control step and the target angle is held across the physics substeps.
 
+## The arm settles below its target under gravity
+
+**Symptom.** Holding a fixed target with the zero action for 100 steps from
+the home pose leaves a steady-state gap between `ctrl` (the commanded angle)
+and `qpos` (the actual angle): shoulder_lift ≈ −0.028 rad, elbow_flex ≈
+−0.022 rad, wrist_flex ≈ −0.009 rad, shoulder_pan and wrist_roll ≈ 0 (they
+carry no gravity load at the home pose). The end-effector site settles about
+17 mm below the commanded Cartesian target.
+
+**Cause.** The `<position>` actuators are proportional only (`kp="17.8"`, no
+integral term), so a joint under a constant gravity torque τ settles at a
+residual offset of τ/kp rather than closing the error to zero. The
+gravity-compensation term in the upstream controller (see the fix above) never
+actually offset this, since it was written into a position actuator's `ctrl`
+instead of applied as a torque.
+
+**Fix.** Not fixed. Closed-loop policies that observe `ee_pos` compensate for
+it; an open-loop consumer must not assume `qpos == ctrl`. Whether the real
+STS3215 firmware has an integral term is part of the servo model verification
+in the [Roadmap](ROADMAP.md).
+
 ## `SO101GymEnv` has no `step()` or `reset()`
 
 **Symptom.** `AttributeError` or a silently non-functional environment after

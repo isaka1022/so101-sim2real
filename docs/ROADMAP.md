@@ -69,7 +69,10 @@ requires the physical arm.
 Measuring the SO-101's actual physics to replace the currently unverified
 motor parameters (`damping` / `frictionloss` / `armature`, carried over from
 the upstream MJCF, which itself borrowed them from an unrelated robot — see
-`notes/references.md`).
+`notes/references.md`). This should also settle whether the real STS3215
+position loop has an integral term, since the sim's `kp`-only actuators leave
+a measurable steady-state error under gravity load (see
+[Limitations](limitations.md#the-arm-settles-below-its-target-under-gravity)).
 
 - **Status:** planned. Start date is undecided; it requires recording real
   trajectories on hardware, which is a separate effort from the sim work above.

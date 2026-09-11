@@ -174,6 +174,10 @@ on why this became a standalone package instead of an upstream PR.
   `mujoco_menagerie/robotstudio_so101` (same values, same unverified
   lineage). System identification is out of scope for this package (see the
   parent repo's Phase 2 notes).
+- **Not fixed: the arm settles below its target under gravity.** The
+  proportional-only `<position>` actuators leave a steady-state gap under
+  gravity load — see
+  [Limitations](../../docs/limitations.md#the-arm-settles-below-its-target-under-gravity).
 - **Dropped: teleop/gamepad/keyboard wrappers, `PassiveViewerWrapper`,
   `GripperPenaltyWrapper`, `ResetDelayWrapper`, `EEActionWrapper`,
   `InputsControlWrapper`, and the `wrap_env`/`make_env` factory.** These are
