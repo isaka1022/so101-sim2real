@@ -155,6 +155,16 @@ on why this became a standalone package instead of an upstream PR.
   current gripper position each step, so `grasp=0` meant "no change"; as of
   v0.2.0 it means "fully closed". This does not by itself make LeRobot policy
   training pick up the new convention — see *Known limitations* below.
+- **Fixed (v0.3.0): arm `ctrl` now carries IK target joint angles.** The arm
+  actuators are declared `<position>` in the MJCF, so their `ctrl` is a target
+  angle; upstream wrote a joint-space PD torque (plus gravity compensation)
+  into it, which drove the command far outside each joint's `ctrlrange` and
+  saturated the actuators into bang-bang tracking. `solve_ik` (renamed from
+  `ik_control`) now returns the target joint angles and the environment writes
+  them to `ctrl`, leaving the proportional position tracking (`kp` only;
+  damping comes from the passive joint damping) to the `<position>`
+  actuators. The IK is also solved once per control step rather than once per
+  physics substep, since the target angle is held across the substeps.
 - **Not fixed, inherited as-is: unverified motor parameters.** `damping` /
   `frictionloss` / `armature` for the STS3215 servos are carried over
   unchanged from the upstream MJCF, which itself adapted them from the
@@ -164,6 +174,10 @@ on why this became a standalone package instead of an upstream PR.
   `mujoco_menagerie/robotstudio_so101` (same values, same unverified
   lineage). System identification is out of scope for this package (see the
   parent repo's Phase 2 notes).
+- **Not fixed: the arm settles below its target under gravity.** The
+  proportional-only `<position>` actuators leave a steady-state gap under
+  gravity load (about 17 mm at the end-effector in the home pose). See the
+  parent repo's `docs/limitations.md`.
 - **Dropped: teleop/gamepad/keyboard wrappers, `PassiveViewerWrapper`,
   `GripperPenaltyWrapper`, `ResetDelayWrapper`, `EEActionWrapper`,
   `InputsControlWrapper`, and the `wrap_env`/`make_env` factory.** These are

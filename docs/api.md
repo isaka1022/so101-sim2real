@@ -33,7 +33,7 @@ internal to the environment rather than part of the intended public surface,
 but are documented here because their behaviour explains several of the
 [limitations](limitations.md).
 
-::: lerobot_env_so101.ik_control.ik_control
+::: lerobot_env_so101.ik_control.solve_ik
 
 ::: lerobot_env_so101.ik_control.compute_ik_levenberg_marquardt
 

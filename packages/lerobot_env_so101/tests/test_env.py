@@ -24,6 +24,8 @@ from gymnasium.utils.env_checker import check_env
 
 import lerobot_env_so101  # noqa: F401  registers the gym env
 from lerobot_env_so101 import gripper
+from lerobot_env_so101.ik_control import solve_ik
+from lerobot_env_so101.mujoco_env import _IK_DAMPING, _IK_ITERATIONS
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
 ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
@@ -161,6 +163,41 @@ def test_action_scale_scales_position_deltas():
     half = target_travel_x(0.5)
     assert full == pytest.approx(2 * 0.04)
     assert half == pytest.approx(2 * 0.04 * 0.5)
+
+
+def test_ctrl_receives_target_joint_angles_not_torques():
+    """The arm actuators are `<position>`: ctrl is a target angle, not a torque."""
+    env = gym.make(ENV_ID, image_obs=False).unwrapped
+    env.reset(seed=SEED)
+    model, data = env._model, env._data
+
+    action = np.array([0.3, -0.2, 0.1, 0.0], dtype=np.float32)
+    x, y, z, _ = action
+    delta = np.asarray([x, y, z]) * env._action_scale
+    target_pos = np.clip(
+        env._target_ee_pos + delta, env._cartesian_bounds[0], env._cartesian_bounds[1]
+    )
+
+    expected_q = solve_ik(
+        model=model,
+        data=data,
+        site_id=env._ee_site_id,
+        dof_ids=env._arm_dof_ids,
+        target_pos=target_pos,
+        ik_damping=_IK_DAMPING,
+        ik_iterations=_IK_ITERATIONS,
+    )
+
+    env.step(action)
+
+    ctrl = data.ctrl[env._arm_ctrl_ids].copy()
+    np.testing.assert_allclose(ctrl, expected_q, atol=1e-4)
+
+    for ctrl_id, value in zip(env._arm_ctrl_ids, ctrl, strict=True):
+        low, high = model.actuator_ctrlrange[ctrl_id]
+        assert low <= value <= high, f"ctrl {value} outside ctrlrange [{low}, {high}]"
+
+    env.close()
 
 
 def test_action_scale_must_be_positive():

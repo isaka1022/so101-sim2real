@@ -22,7 +22,10 @@ https://github.com/huggingface/gym-hil/pull/36), authored by Paul Loh
 (github.com/lohpaul9).
 
 Based on: https://alefram.github.io/posts/Basic-inverse-kinematics-in-Mujoco
-Uses numerical IK to compute target joint angles, then applies joint-space PD control.
+Uses numerical IK to compute the target joint angles for a Cartesian target.
+The angles are written to the arm's ``<position>`` actuators, which perform
+proportional position tracking themselves (``kp`` only; damping comes from the
+passive joint damping); this module computes no torques.
 
 This approach avoids the problematic task-space inertia matrix and works well
 for 5-DOF planar arms like SO-101.
@@ -141,22 +144,20 @@ def compute_ik_pseudoinverse(
     return q
 
 
-def ik_control(
+def solve_ik(
     model: mujoco.MjModel,
     data: mujoco.MjData,
     site_id: int,
     dof_ids: np.ndarray,
     target_pos: np.ndarray,
-    joint_kp: float = 200.0,
-    joint_kd: float = 20.0,
     ik_method: str = "levenberg_marquardt",
     ik_damping: float = 0.1,
     ik_iterations: int = 20,
-    gravity_comp: bool = True,
 ) -> np.ndarray:
     """
-    IK-based Cartesian control: Compute target joint angles via IK,
-    then apply joint-space PD control.
+    Solve for the joint angles that place the end-effector at a Cartesian target.
+
+    The returned angles are the command for the arm's ``<position>`` actuators.
 
     Args:
         model: MuJoCo model
@@ -164,19 +165,17 @@ def ik_control(
         site_id: Site ID for end-effector
         dof_ids: DOF IDs for controlled joints
         target_pos: Desired Cartesian position (3,)
-        joint_kp: Joint-space proportional gain
-        joint_kd: Joint-space derivative gain
         ik_method: "levenberg_marquardt" or "pseudoinverse"
         ik_damping: Damping for LM (if used)
         ik_iterations: Max IK iterations
-        gravity_comp: Whether to add gravity compensation
 
     Returns:
-        Joint torques (len(dof_ids),)
+        Target joint angles (len(dof_ids),)
+
+    Raises:
+        ValueError: If ``ik_method`` is not a known solver.
     """
-    # Get current state
     current_q = data.qpos[dof_ids].copy()
-    current_dq = data.qvel[dof_ids].copy()
 
     # Compute target joint angles via IK
     if ik_method == "levenberg_marquardt":
@@ -207,12 +206,4 @@ def ik_control(
     data.qpos[dof_ids] = current_q
     mujoco.mj_forward(model, data)
 
-    # Joint-space PD control
-    q_error = target_q - current_q
-    tau = joint_kp * q_error - joint_kd * current_dq
-
-    # Gravity compensation
-    if gravity_comp:
-        tau += data.qfrc_bias[dof_ids]
-
-    return tau
+    return target_q
