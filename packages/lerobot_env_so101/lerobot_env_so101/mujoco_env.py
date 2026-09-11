@@ -295,7 +295,7 @@ class SO101GymEnv(MujocoGymEnv):
         reset.
         """
         self._data.qpos[self._arm_dof_ids] = self._home_position
-        self._data.ctrl[self._arm_ctrl_ids] = 0.0
+        self._data.ctrl[self._arm_ctrl_ids] = self._home_position
         mujoco.mj_forward(self._model, self._data)
 
         ee_pos = self._data.sensor("so101/ee_pos").data
