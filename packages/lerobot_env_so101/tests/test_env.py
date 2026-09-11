@@ -24,7 +24,7 @@ from gymnasium.utils.env_checker import check_env
 
 import lerobot_env_so101  # noqa: F401  registers the gym env
 from lerobot_env_so101 import gripper
-from lerobot_env_so101.ik_control import compute_ik_levenberg_marquardt
+from lerobot_env_so101.ik_control import solve_ik
 from lerobot_env_so101.mujoco_env import _IK_DAMPING, _IK_ITERATIONS
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
@@ -166,11 +166,7 @@ def test_action_scale_scales_position_deltas():
 
 
 def test_ctrl_receives_target_joint_angles_not_torques():
-    """The arm actuators are `<position>`: ctrl is a target angle, not a torque.
-
-    Writing a PD torque into a position actuator's ctrl drives it far outside
-    the joint ctrlrange, which saturates the actuator into bang-bang tracking.
-    """
+    """The arm actuators are `<position>`: ctrl is a target angle, not a torque."""
     env = gym.make(ENV_ID, image_obs=False).unwrapped
     env.reset(seed=SEED)
     model, data = env._model, env._data
@@ -182,23 +178,15 @@ def test_ctrl_receives_target_joint_angles_not_torques():
         env._target_ee_pos + delta, env._cartesian_bounds[0], env._cartesian_bounds[1]
     )
 
-    # The solver uses data.qpos as scratch space, so snapshot and restore it
-    # before letting the environment take its own step.
-    qpos_before = data.qpos.copy()
-    qvel_before = data.qvel.copy()
-    expected_q = compute_ik_levenberg_marquardt(
+    expected_q = solve_ik(
         model=model,
         data=data,
         site_id=env._ee_site_id,
         dof_ids=env._arm_dof_ids,
         target_pos=target_pos,
-        current_q=data.qpos[env._arm_dof_ids].copy(),
-        damping=_IK_DAMPING,
-        max_iterations=_IK_ITERATIONS,
+        ik_damping=_IK_DAMPING,
+        ik_iterations=_IK_ITERATIONS,
     )
-    data.qpos[:] = qpos_before
-    data.qvel[:] = qvel_before
-    mujoco.mj_forward(model, data)
 
     env.step(action)
 
