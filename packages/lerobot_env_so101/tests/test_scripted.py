@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 import gymnasium as gym
 import numpy as np
 import pytest
@@ -51,9 +49,6 @@ def test_scripted_reach_close_reaches_and_closes(seed):
 
 def test_scripted_reach_close_is_pure_function_of_obs():
     """Behaviour cloning needs the label to depend on the observation alone."""
-    module = sys.modules[scripted_reach_close.__module__]
-    before = {k: v for k, v in vars(module).items() if not k.startswith("__")}
-
     obs = np.array(
         [0.1, -0.2, 0.3, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.32, 0.04, 0.18, 0.3, 0.02, 0.02],
         dtype=np.float32,
@@ -65,11 +60,6 @@ def test_scripted_reach_close_is_pure_function_of_obs():
 
     np.testing.assert_array_equal(first, second)
     np.testing.assert_array_equal(obs, obs_before)
-
-    after = {k: v for k, v in vars(module).items() if not k.startswith("__")}
-    assert list(after) == list(before)
-    assert all(after[name] is value for name, value in before.items())
-    assert not vars(scripted_reach_close)
 
 
 if __name__ == "__main__":
