@@ -235,6 +235,51 @@ on why this became a standalone package instead of an upstream PR.
   but a LeRobot policy will only actually train against this convention if
   its dataset was collected/labeled that way.
 
+## Policies
+
+### Scripted reach-and-close and the BC policy
+
+`lerobot_env_so101.scripted.scripted_reach_close` is a hand-written controller
+that moves the end effector over the block, descends onto it, and closes the
+gripper. It is **reach-and-close, not a pick**: the position-only IK cannot
+reach a vertical straddling approach (see "Top-down grasp is not currently
+reachable" above), so the block is never lifted. The end effector settles about
+0.027 m above the block's centre, where the fixed jaw contacts its top face.
+
+The controller is a pure function of the flattened 17-dim state observation
+(`agent_pos` 14 + `environment_state` 3), which makes it usable directly as a
+behaviour-cloning label. `sim/` trains a 2×128 MLP on those labels and exports
+it to ONNX for the browser viewer; `lerobot_env_so101.policy` holds the
+observation layout, the model, and the export. The exported graph applies the
+normalization and output squashing internally, so it maps a raw observation to
+a ready-to-execute `[dx, dy, dz, grasp]` action.
+
+Reproduce (needs the `train` extra: `pip install -e
+"packages/lerobot_env_so101[train]"`):
+
+```bash
+python sim/collect_demos.py --episodes 300 --out sim/data/reach_close_demos.npz
+python sim/train_bc.py sim/data/reach_close_demos.npz --out sim/data/bc_reach_close.pt
+python sim/export_onnx.py sim/data/bc_reach_close.pt --out web/assets/policies/reach_close.onnx
+python sim/eval_reachclose_policy.py web/assets/policies/reach_close.onnx --episodes 100 --update-manifest
+```
+
+Demonstrations are collected DART-style: the stored label is the noise-free
+scripted action, while the executed action carries Gaussian noise on the
+position deltas, so the dataset covers the states an imperfect policy visits.
+The close phase is exempt — it depends on an exactly-zero position delta to
+trigger the environment's hold-position lock.
+
+Measured success (gripper commanded closed within 0.05 m of the block, 100-step
+episodes, `random_block_position=True`, `action_scale=0.025`):
+
+| Controller | Episodes | Success rate |
+| --- | --- | --- |
+| Scripted `scripted_reach_close` | 300 (seeds 0–299) | 1.000 |
+| BC policy via ONNX / onnxruntime | 100 (seeds 1000–1099) | 1.000 |
+
+The BC policy's mean final end-effector-to-block distance is 0.029 m.
+
 ## Attribution
 
 - SO-101 MJCF/URDF and control code: ported from
