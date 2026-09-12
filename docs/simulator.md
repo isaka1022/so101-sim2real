@@ -23,8 +23,16 @@ Three details differ from what you get after `pip install lerobot-env-so101`:
   download for a demo, so the viewer ships copies reduced to about 12% of their
   faces (1.9 MB). Collision geometry uses the same meshes, so contact behaviour
   in the browser is close to, but not identical to, the package.
-- **There is no policy.** The sliders drive `data.ctrl` directly. This is a way
-  to feel the joint limits and the gripper, not to watch a trained agent.
+- **The policy runs, but under slightly different physics.** Picking
+  "Reach and close (BC)" in the Policy selector runs the committed ONNX export
+  of the behaviour-cloned policy — a state-only MLP, scoring 1.000 success over
+  100 episodes in the Python env with the full meshes — through
+  onnxruntime-web. It reaches the block and closes the gripper; it does not pick
+  it up, because the position-only IK cannot reach a straddling approach (see
+  ["Policies"](https://github.com/isaka1022/so101-sim2real/tree/main/packages/lerobot_env_so101#policies)
+  in the package README). Because the collision meshes are decimated, contact
+  differs from the package and the browser run can diverge from it. Leaving the
+  selector on "None (sliders)" drives `data.ctrl` from the sliders as before.
 - **It is single-threaded.** The multi-threaded MuJoCo build needs
   `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` headers, and
   GitHub Pages cannot send custom headers.
