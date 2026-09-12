@@ -1,4 +1,4 @@
-// Joint sliders + simulation controls (pause/resume, reset). Pure DOM, no framework.
+// Joint sliders + simulation and policy controls. Pure DOM, no framework.
 
 function actuatorName(mujoco, model, index) {
   const OBJ_ACTUATOR = mujoco.mjtObj.mjOBJ_ACTUATOR.value;
@@ -22,7 +22,11 @@ function ctrlRange(model, index) {
  * @param {HTMLElement} opts.pauseBtn
  * @param {HTMLElement} opts.resetBtn
  * @param {HTMLElement} opts.statusLineEl
- * @param {() => void} opts.onReset - called after ctrl is zeroed and mj_resetData should run
+ * @param {HTMLSelectElement} opts.policySelectEl
+ * @param {HTMLElement} opts.randomizeBtn
+ * @param {() => void} opts.onReset - resets the scene (arm home + block)
+ * @param {() => void} opts.onRandomizeBlock
+ * @param {(entry: object | null) => void} opts.onSelectPolicy - null means slider control
  * @param {(paused: boolean) => void} opts.onTogglePause
  */
 export function createControlPanel({
@@ -33,10 +37,15 @@ export function createControlPanel({
   pauseBtn,
   resetBtn,
   statusLineEl,
+  policySelectEl,
+  randomizeBtn,
   onReset,
+  onRandomizeBlock,
+  onSelectPolicy,
   onTogglePause,
 }) {
   const sliders = [];
+  let policyEntries = [];
 
   for (let i = 0; i < model.nu; i++) {
     const name = actuatorName(mujoco, model, i);
@@ -81,6 +90,35 @@ export function createControlPanel({
     }
   }
 
+  function setSlidersEnabled(enabled) {
+    for (const slider of sliders) slider.input.disabled = !enabled;
+    jointListEl.classList.toggle("disabled", !enabled);
+  }
+
+  /** Populate the policy selector; entries come from the policy manifest. */
+  function setPolicies(entries) {
+    policyEntries = entries;
+    for (const [index, entry] of entries.entries()) {
+      const option = document.createElement("option");
+      option.value = String(index);
+      const rate = entry.success_rate;
+      option.textContent =
+        rate === undefined ? entry.name : `${entry.name} — ${(rate * 100).toFixed(0)}% success`;
+      policySelectEl.appendChild(option);
+    }
+    policySelectEl.disabled = entries.length === 0;
+  }
+
+  policySelectEl.addEventListener("change", () => {
+    const index = Number(policySelectEl.value);
+    onSelectPolicy(Number.isNaN(index) || index < 0 ? null : policyEntries[index]);
+  });
+
+  randomizeBtn.addEventListener("click", () => {
+    onRandomizeBlock();
+    syncSlidersFromCtrl();
+  });
+
   let paused = false;
   pauseBtn.addEventListener("click", () => {
     paused = !paused;
@@ -89,7 +127,6 @@ export function createControlPanel({
   });
 
   resetBtn.addEventListener("click", () => {
-    for (let i = 0; i < model.nu; i++) data.ctrl[i] = 0;
     onReset();
     syncSlidersFromCtrl();
   });
@@ -98,5 +135,9 @@ export function createControlPanel({
     statusLineEl.textContent = text;
   }
 
-  return { syncSlidersFromCtrl, setStatus };
+  function clearPolicySelection() {
+    policySelectEl.value = "-1";
+  }
+
+  return { syncSlidersFromCtrl, setSlidersEnabled, setPolicies, clearPolicySelection, setStatus };
 }

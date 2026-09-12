@@ -13,6 +13,10 @@ const MODEL_ASSETS_SRC = path.join(
   "packages/lerobot_env_so101/lerobot_env_so101/assets"
 );
 const MESHES_SRC = path.join(__dirname, "assets/meshes");
+const POLICIES_SRC = path.join(__dirname, "assets/policies");
+const ORT_SRC = path.join(__dirname, "node_modules/onnxruntime-web/dist");
+// Both files are fetched at runtime from ort.env.wasm.wasmPaths.
+const ORT_RUNTIME_FILES = ["ort-wasm-simd-threaded.wasm", "ort-wasm-simd-threaded.mjs"];
 
 function copyFile(src, destDir, destName = path.basename(src)) {
   fs.mkdirSync(destDir, { recursive: true });
@@ -62,7 +66,19 @@ async function main() {
     copyFile(path.join(MESHES_SRC, file), meshAssetsDir);
   }
 
+  const policiesDir = path.join(DIST, "policies");
+  const policyFiles = fs.readdirSync(POLICIES_SRC);
+  for (const file of policyFiles) {
+    copyFile(path.join(POLICIES_SRC, file), policiesDir);
+  }
+
+  const ortDir = path.join(DIST, "ort");
+  for (const file of ORT_RUNTIME_FILES) {
+    copyFile(path.join(ORT_SRC, file), ortDir);
+  }
+
   console.log(`Copied ${meshFiles.length} mesh files to ${meshAssetsDir}`);
+  console.log(`Copied ${policyFiles.length} policy files to ${policiesDir}`);
   console.log(`Build complete: ${DIST}`);
 }
 

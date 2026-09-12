@@ -120,6 +120,25 @@
       font-weight: 600;
     }
 
+    #policy-select {
+      width: 100%;
+      background: #1b1e24;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    #policy-select:disabled {
+      color: var(--text-dim);
+    }
+
+    #joint-list.disabled {
+      opacity: 0.55;
+    }
+
     .joint-row {
       margin-bottom: 12px;
     }
@@ -245,6 +264,14 @@
       <div class="controls-row">
         <button id="btn-pause">Pause</button>
         <button id="btn-reset">Reset</button>
+      </div>
+
+      <div class="section-title">Policy</div>
+      <select id="policy-select" disabled>
+        <option value="-1">None (sliders)</option>
+      </select>
+      <div class="controls-row">
+        <button id="btn-randomize-block">Randomize block</button>
       </div>
 
       <div class="section-title">Joints</div>
