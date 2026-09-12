@@ -52,6 +52,12 @@ def split_by_episode(episode_ends: np.ndarray, val_fraction: float, rng: np.rand
     Consecutive steps within an episode are near-duplicates; splitting by step
     would leak the validation states into training and flatter the val loss.
     """
+    if len(episode_ends) < 2:
+        raise ValueError(
+            f"need at least 2 episodes to hold one out for validation, got "
+            f"{len(episode_ends)}; collect more with sim/collect_demos.py"
+        )
+
     starts = np.concatenate([[0], episode_ends[:-1]])
     order = rng.permutation(len(episode_ends))
     n_val = max(1, int(round(len(episode_ends) * val_fraction)))

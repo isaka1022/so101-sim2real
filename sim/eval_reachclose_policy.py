@@ -89,9 +89,16 @@ def main() -> None:
     if args.update_manifest:
         manifest_path = args.policy.parent / "manifest.json"
         entries = json.loads(manifest_path.read_text())
-        for entry in entries:
-            if entry.get("file") == args.policy.name:
-                entry["success_rate"] = round(success_rate, 3)
+        matched = [e for e in entries if e.get("file") == args.policy.name]
+        if not matched:
+            raise SystemExit(
+                f"no entry in {manifest_path} has file={args.policy.name!r} "
+                f"(found {[e.get('file') for e in entries]}); "
+                "re-export with sim/export_onnx.py to create one"
+            )
+
+        for entry in matched:
+            entry["success_rate"] = round(success_rate, 3)
         manifest_path.write_text(json.dumps(entries, indent=2) + "\n")
         print(f"updated {manifest_path}")
 
