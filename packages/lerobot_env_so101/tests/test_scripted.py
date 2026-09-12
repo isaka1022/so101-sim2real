@@ -19,12 +19,11 @@ import numpy as np
 import pytest
 
 import lerobot_env_so101  # noqa: F401  registers the gym env
-from lerobot_env_so101.policy import flatten_observation
+from lerobot_env_so101.policy import DEFAULT_ACTION_SCALE, ENV_ID, flatten_observation
 from lerobot_env_so101.scripted import scripted_reach_close
 from lerobot_env_so101.scripted.reach_close import is_reach_close_success
 
-ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
-ACTION_SCALE = 0.025
+ACTION_SCALE = DEFAULT_ACTION_SCALE
 MAX_STEPS = 100
 
 

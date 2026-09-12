@@ -28,7 +28,12 @@ behaviour-cloning label for a feed-forward network.
 
 import numpy as np
 
-from lerobot_env_so101.policy import BLOCK_POS_SLICE, EE_POS_SLICE, GRIPPER_POSE_INDEX
+from lerobot_env_so101.policy import (
+    BLOCK_POS_SLICE,
+    DEFAULT_ACTION_SCALE,
+    EE_POS_SLICE,
+    GRIPPER_POSE_INDEX,
+)
 
 # Reach-and-close outcome. gripper_pose is the gripper ctrl target remapped to
 # [-1, 1] with +1 = fully closed; see SO101GymEnv.get_gripper_pose.
@@ -50,7 +55,7 @@ GRIPPER_OPEN = 1.0
 GRIPPER_CLOSED = 0.0
 
 
-def scripted_reach_close(obs: np.ndarray, action_scale: float = 0.025) -> np.ndarray:
+def scripted_reach_close(obs: np.ndarray, action_scale: float = DEFAULT_ACTION_SCALE) -> np.ndarray:
     """Map a flat 17-dim observation to a native ``[dx, dy, dz, grasp]`` action.
 
     Args:

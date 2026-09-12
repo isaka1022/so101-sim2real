@@ -20,8 +20,6 @@ Requires the ``train`` extra.
 """
 
 import json
-import subprocess
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import onnx
@@ -35,31 +33,19 @@ OUTPUT_NAME = "actions"
 OPSET_VERSION = 18
 
 
-def _env_version() -> str:
-    try:
-        return version("lerobot_env_so101")
-    except PackageNotFoundError:
-        return "unknown"
-
-
-def _git_commit() -> str:
-    try:
-        return subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=Path(__file__).resolve().parent,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "unknown"
-
-
-def export_onnx(model: ReachClosePolicy, out_path, action_scale: float) -> Path:
+def export_onnx(
+    model: ReachClosePolicy,
+    out_path,
+    action_scale: float,
+    env_version: str,
+    train_commit: str,
+) -> Path:
     """Write ``model`` to ``out_path`` as ONNX, tagged with the obs layout.
 
     ``obs_order`` travels with the graph so a consumer cannot silently feed the
     17 fields in the wrong order — the resulting actions would look plausible.
+    The provenance fields are supplied by the caller: the package cannot know
+    which repository or dataset a checkpoint came from.
     """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -79,8 +65,8 @@ def export_onnx(model: ReachClosePolicy, out_path, action_scale: float) -> Path:
     metadata = {
         "obs_order": json.dumps(list(OBS_FIELD_NAMES)),
         "action_scale": str(action_scale),
-        "env_version": _env_version(),
-        "train_commit": _git_commit(),
+        "env_version": env_version,
+        "train_commit": train_commit,
     }
     for key, value in metadata.items():
         entry = graph.metadata_props.add()

@@ -15,18 +15,16 @@ import gymnasium as gym
 import numpy as np
 
 import lerobot_env_so101  # noqa: F401  registers the env
-from lerobot_env_so101.policy import flatten_observation
+from lerobot_env_so101.policy import DEFAULT_ACTION_SCALE, ENV_ID, flatten_observation
 from lerobot_env_so101.scripted import scripted_reach_close
 from lerobot_env_so101.scripted.reach_close import is_reach_close_success
 
-ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
-ACTION_SCALE = 0.025
 DEFAULT_OUT = Path(__file__).parent / "data" / "reach_close_demos.npz"
 
 
-def collect(episodes: int, max_steps: int, seed: int, noise_std: float):
+def collect(episodes: int, max_steps: int, seed: int, noise_std: float, action_scale: float):
     env = gym.make(
-        ENV_ID, image_obs=False, random_block_position=True, action_scale=ACTION_SCALE
+        ENV_ID, image_obs=False, random_block_position=True, action_scale=action_scale
     ).unwrapped
     rng = np.random.default_rng(seed)
 
@@ -38,7 +36,7 @@ def collect(episodes: int, max_steps: int, seed: int, noise_std: float):
 
         for _ in range(max_steps):
             flat = flatten_observation(obs)
-            label = scripted_reach_close(flat, ACTION_SCALE)
+            label = scripted_reach_close(flat, action_scale)
             observations.append(flat)
             actions.append(label)
 
@@ -71,11 +69,12 @@ def main() -> None:
     parser.add_argument("--max-steps", type=int, default=100)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--noise-std", type=float, default=0.05)
+    parser.add_argument("--action-scale", type=float, default=DEFAULT_ACTION_SCALE)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args()
 
     observations, actions, episode_ends, successes = collect(
-        args.episodes, args.max_steps, args.seed, args.noise_std
+        args.episodes, args.max_steps, args.seed, args.noise_std, args.action_scale
     )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -85,9 +84,13 @@ def main() -> None:
         actions=actions,
         episode_ends=episode_ends,
         success=successes,
+        action_scale=np.float32(args.action_scale),
     )
 
-    print(f"saved {args.out}: {len(observations)} steps over {len(episode_ends)} episodes")
+    print(
+        f"saved {args.out}: {len(observations)} steps over {len(episode_ends)} episodes "
+        f"(action_scale={args.action_scale})"
+    )
     print(f"scripted success rate: {successes.mean():.3f} ({successes.sum()}/{len(successes)})")
 
 

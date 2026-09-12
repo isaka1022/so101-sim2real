@@ -29,7 +29,12 @@ import onnx  # noqa: E402
 import onnxruntime as ort  # noqa: E402
 import torch  # noqa: E402
 
-from lerobot_env_so101.policy import ACTION_DIM, OBS_DIM, OBS_FIELD_NAMES  # noqa: E402
+from lerobot_env_so101.policy import (  # noqa: E402
+    ACTION_DIM,
+    DEFAULT_ACTION_SCALE,
+    OBS_DIM,
+    OBS_FIELD_NAMES,
+)
 from lerobot_env_so101.policy.bc_model import ReachClosePolicy  # noqa: E402
 from lerobot_env_so101.policy.onnx_export import (  # noqa: E402
     INPUT_NAME,
@@ -37,7 +42,9 @@ from lerobot_env_so101.policy.onnx_export import (  # noqa: E402
     export_onnx,
 )
 
-ACTION_SCALE = 0.025
+ACTION_SCALE = DEFAULT_ACTION_SCALE
+ENV_VERSION = "0.0.0-test"
+TRAIN_COMMIT = "deadbee"
 EXPECTED_METADATA_KEYS = {"obs_order", "action_scale", "env_version", "train_commit"}
 
 
@@ -49,12 +56,17 @@ def _untrained_policy() -> ReachClosePolicy:
 
 
 def test_onnx_io_shape_and_names(tmp_path):
-    out = export_onnx(_untrained_policy(), tmp_path / "policy.onnx", ACTION_SCALE)
+    out = export_onnx(
+        _untrained_policy(), tmp_path / "policy.onnx", ACTION_SCALE, ENV_VERSION, TRAIN_COMMIT
+    )
 
     graph = onnx.load(out.as_posix())
     metadata = {entry.key: entry.value for entry in graph.metadata_props}
     assert EXPECTED_METADATA_KEYS <= metadata.keys()
     assert json.loads(metadata["obs_order"]) == list(OBS_FIELD_NAMES)
+    assert metadata["action_scale"] == str(ACTION_SCALE)
+    assert metadata["env_version"] == ENV_VERSION
+    assert metadata["train_commit"] == TRAIN_COMMIT
 
     session = ort.InferenceSession(out.as_posix(), providers=["CPUExecutionProvider"])
     (model_input,) = session.get_inputs()
@@ -67,7 +79,7 @@ def test_onnx_io_shape_and_names(tmp_path):
 
 def test_onnx_matches_torch_output(tmp_path):
     model = _untrained_policy()
-    out = export_onnx(model, tmp_path / "policy.onnx", ACTION_SCALE)
+    out = export_onnx(model, tmp_path / "policy.onnx", ACTION_SCALE, ENV_VERSION, TRAIN_COMMIT)
 
     rng = np.random.default_rng(0)
     obs = rng.normal(size=(1, OBS_DIM)).astype(np.float32)

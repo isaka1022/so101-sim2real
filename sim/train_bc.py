@@ -5,6 +5,8 @@
 """
 
 import argparse
+import subprocess
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import numpy as np
@@ -15,10 +17,33 @@ from torch.utils.data import DataLoader, TensorDataset
 from lerobot_env_so101.policy import ACTION_DIM, OBS_DIM
 from lerobot_env_so101.policy.bc_model import ReachClosePolicy, save_checkpoint
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = Path(__file__).parent / "data" / "bc_reach_close.pt"
 VAL_FRACTION = 0.1
 LEARNING_RATE = 1e-3
 LOG_EVERY = 20
+UNKNOWN = "unknown"
+
+
+def env_version() -> str:
+    try:
+        return version("lerobot_env_so101")
+    except PackageNotFoundError:
+        return UNKNOWN
+
+
+def git_commit() -> str:
+    """Short HEAD of this repository, for provenance in the checkpoint."""
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return UNKNOWN
 
 
 def split_by_episode(episode_ends: np.ndarray, val_fraction: float, rng: np.random.Generator):
@@ -53,6 +78,7 @@ def main() -> None:
     data = np.load(args.dataset)
     observations = data["observations"].astype(np.float32)
     actions = data["actions"].astype(np.float32)
+    action_scale = float(data["action_scale"])
     assert observations.shape[1] == OBS_DIM and actions.shape[1] == ACTION_DIM
 
     train_idx, val_idx = split_by_episode(data["episode_ends"], VAL_FRACTION, rng)
@@ -103,6 +129,9 @@ def main() -> None:
         args.out,
         {
             "dataset": str(args.dataset),
+            "action_scale": action_scale,
+            "env_version": env_version(),
+            "train_commit": git_commit(),
             "epochs": args.epochs,
             "batch_size": args.batch_size,
             "seed": args.seed,

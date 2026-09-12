@@ -16,11 +16,14 @@ import numpy as np
 import onnxruntime as ort
 
 import lerobot_env_so101  # noqa: F401  registers the env
-from lerobot_env_so101.policy import BLOCK_POS_SLICE, EE_POS_SLICE, flatten_observation
+from lerobot_env_so101.policy import (
+    BLOCK_POS_SLICE,
+    EE_POS_SLICE,
+    ENV_ID,
+    flatten_observation,
+)
 from lerobot_env_so101.scripted.reach_close import is_reach_close_success
 
-ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
-ACTION_SCALE = 0.025
 DEFAULT_POLICY = (
     Path(__file__).resolve().parents[1] / "web" / "assets" / "policies" / "reach_close.onnx"
 )
@@ -30,8 +33,18 @@ def evaluate(policy_path: Path, episodes: int, max_steps: int, seed: int):
     session = ort.InferenceSession(policy_path.as_posix(), providers=["CPUExecutionProvider"])
     input_name = session.get_inputs()[0].name
 
+    # The scale the policy was trained against; evaluating at any other scale
+    # silently changes the step size the network's outputs assume.
+    exported = session.get_modelmeta().custom_metadata_map
+    if "action_scale" not in exported:
+        raise SystemExit(
+            f"{policy_path} has no action_scale in its ONNX metadata; "
+            "re-export it with sim/export_onnx.py"
+        )
+    action_scale = float(exported["action_scale"])
+
     env = gym.make(
-        ENV_ID, image_obs=False, random_block_position=True, action_scale=ACTION_SCALE
+        ENV_ID, image_obs=False, random_block_position=True, action_scale=action_scale
     ).unwrapped
 
     successes, final_distances = [], []

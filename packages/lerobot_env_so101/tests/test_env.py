@@ -26,9 +26,9 @@ import lerobot_env_so101  # noqa: F401  registers the gym env
 from lerobot_env_so101 import gripper
 from lerobot_env_so101.ik_control import solve_ik
 from lerobot_env_so101.mujoco_env import _IK_DAMPING, _IK_ITERATIONS
+from lerobot_env_so101.policy import ENV_ID
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
-ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
 SEED = 0
 ROLLOUT_STEPS = 30
 DEAD_DIM_THRESHOLD = 1e-9

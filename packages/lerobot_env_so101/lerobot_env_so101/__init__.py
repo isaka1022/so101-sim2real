@@ -28,9 +28,11 @@ import gymnasium as gym
 
 from lerobot_env_so101.mujoco_env import GymRenderingSpec, MujocoGymEnv, SO101GymEnv
 from lerobot_env_so101.pick_env import SO101PickCubeGymEnv
+from lerobot_env_so101.policy import ENV_ID
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
 __all__ = [
+    "ENV_ID",
     "GymRenderingSpec",
     "MujocoGymEnv",
     "SO101GymEnv",
@@ -39,7 +41,7 @@ __all__ = [
 ]
 
 gym.register(
-    id="lerobot_env_so101/SO101PickCube-v0",
+    id=ENV_ID,
     entry_point="lerobot_env_so101.pick_env:SO101PickCubeGymEnv",
     max_episode_steps=100,
 )
