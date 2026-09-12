@@ -28,6 +28,9 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8.1.0"]
+# Only needed to collect demonstrations, train the BC policy, and export it to
+# ONNX (see "Policies" in the README). CI installs `test` alone.
+train = ["torch", "onnx", "onnxruntime"]
 
 [project.urls]
 homepage = "https://github.com/isaka1022/so101-sim2real"

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "reach-close",
+    "name": "Reach and close (BC)",
+    "file": "reach_close.onnx",
+    "action_scale": 0.025,
+    "obs_dim": 17,
+    "action_dim": 4,
+    "success_rate": 1.0
+  }
+]
