@@ -15,8 +15,7 @@ const MODEL_ASSETS_SRC = path.join(
 const MESHES_SRC = path.join(__dirname, "assets/meshes");
 const POLICIES_SRC = path.join(__dirname, "assets/policies");
 const ORT_SRC = path.join(__dirname, "node_modules/onnxruntime-web/dist");
-// Both files are fetched at runtime from ort.env.wasm.wasmPaths (verified in
-// the browser's network log), so both must ship next to the bundle.
+// Both files are fetched at runtime from ort.env.wasm.wasmPaths.
 const ORT_RUNTIME_FILES = ["ort-wasm-simd-threaded.wasm", "ort-wasm-simd-threaded.mjs"];
 
 function copyFile(src, destDir, destName = path.basename(src)) {
