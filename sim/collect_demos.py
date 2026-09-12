@@ -84,7 +84,9 @@ def main() -> None:
         actions=actions,
         episode_ends=episode_ends,
         success=successes,
-        action_scale=np.float32(args.action_scale),
+        # float64: a float32 round-trip turns 0.025 into 0.02500000037252903,
+        # which then reaches the ONNX metadata and the manifest as that string.
+        action_scale=np.float64(args.action_scale),
     )
 
     print(
