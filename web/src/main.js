@@ -198,9 +198,12 @@ async function main() {
   // policy is trained only on episodes that start from home with the gripper
   // open, so moving the block under a closed gripper leaves it saturated.
   function resetScene(xy = blockXy) {
+    generation += 1;
+    inferenceInFlight = false;
     controller.reset();
     placeBlock(xy);
     substepsSinceAction = N_SUBSTEPS;
+    panel.syncSlidersFromCtrl();
   }
 
   const jointListEl = document.getElementById("joint-list");
@@ -213,6 +216,9 @@ async function main() {
   let paused = false;
   let policy = null;
   let inferenceInFlight = false;
+  // Bumped by resetScene and selectPolicy; a pending load or inference that
+  // started under an older generation discards its result.
+  let generation = 0;
   let substepsSinceAction = N_SUBSTEPS;
   let inferenceCount = 0;
   let inferenceTotalMs = 0;
@@ -245,21 +251,36 @@ async function main() {
   const baseStatus = `${model.ngeom} geoms · ${model.nu} actuators · timestep ${PHYSICS_TIMESTEP}s`;
   panel.setStatus(baseStatus);
 
+  function deactivatePolicy() {
+    policy = null;
+    inferenceInFlight = false;
+    controller = createController(mujoco, model, data, { actionScale: 1.0 });
+    panel.clearPolicySelection();
+    panel.setSlidersEnabled(true);
+    panel.setStatus(baseStatus);
+  }
+
   async function selectPolicy(entry) {
+    const myGeneration = ++generation;
     policy = null;
     inferenceInFlight = false;
     inferenceCount = 0;
     inferenceTotalMs = 0;
     if (!entry) {
-      controller = createController(mujoco, model, data, { actionScale: 1.0 });
-      panel.setSlidersEnabled(true);
-      panel.setStatus(baseStatus);
+      deactivatePolicy();
       return;
     }
 
     panel.setSlidersEnabled(false);
     panel.setStatus(`Loading ${entry.name}…`);
-    const loaded = await loadPolicy(entry);
+    let loaded;
+    try {
+      loaded = await loadPolicy(entry);
+    } catch (err) {
+      if (myGeneration === generation) deactivatePolicy();
+      throw err;
+    }
+    if (myGeneration !== generation) return; // the user moved on while loading
     // The scale the policy was trained at; the env default of 1.0 would turn
     // every output into a workspace-saturating jump.
     controller = createController(mujoco, model, data, { actionScale: loaded.actionScale });
@@ -294,17 +315,25 @@ async function main() {
     const obs = getObservation(mujoco, model, data, obsCtx);
     const startedAt = performance.now();
     const active = policy;
+    const myGeneration = generation;
+    const stale = () => policy !== active || myGeneration !== generation;
     runPolicy(active.session, obs)
       .then((action) => {
-        if (policy !== active) return;
+        // A result that arrives while paused is dropped; substepsSinceAction is
+        // still at the boundary, so the next resumed frame re-infers.
+        if (stale() || paused) return;
         inferenceTotalMs += performance.now() - startedAt;
         inferenceCount += 1;
         controller.applyAction(action);
         substepsSinceAction = 0;
+        panel.syncSlidersFromCtrl();
       })
-      .catch((err) => showError("Policy inference failed", err))
+      .catch((err) => {
+        showError("Policy inference failed", err);
+        if (!stale()) deactivatePolicy();
+      })
       .finally(() => {
-        if (policy === active) inferenceInFlight = false;
+        if (!stale()) inferenceInFlight = false;
       });
   }
 
@@ -345,7 +374,6 @@ async function main() {
           substepsSinceAction += 1;
           steps -= 1;
         }
-        panel.syncSlidersFromCtrl();
       } else {
         for (let i = 0; i < steps; i++) mujoco.mj_step(model, data);
       }

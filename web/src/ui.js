@@ -135,5 +135,9 @@ export function createControlPanel({
     statusLineEl.textContent = text;
   }
 
-  return { syncSlidersFromCtrl, setSlidersEnabled, setPolicies, setStatus };
+  function clearPolicySelection() {
+    policySelectEl.value = "-1";
+  }
+
+  return { syncSlidersFromCtrl, setSlidersEnabled, setPolicies, clearPolicySelection, setStatus };
 }
