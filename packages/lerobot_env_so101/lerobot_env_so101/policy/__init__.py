@@ -45,6 +45,17 @@ OBS_DIM = len(OBS_FIELD_NAMES)
 ACTION_DIM = 4
 
 
+def _span(first: str, last: str) -> slice:
+    return slice(OBS_FIELD_NAMES.index(first), OBS_FIELD_NAMES.index(last) + 1)
+
+
+# Derived rather than written out so reordering OBS_FIELD_NAMES cannot leave a
+# consumer reading the wrong fields.
+GRIPPER_POSE_INDEX = OBS_FIELD_NAMES.index("gripper_pose")
+EE_POS_SLICE = _span("ee_x", "ee_z")
+BLOCK_POS_SLICE = _span("block_x", "block_z")
+
+
 def flatten_observation(obs: Mapping[str, np.ndarray]) -> np.ndarray:
     """Flatten a state-only ``SO101PickCube-v0`` observation into ``OBS_FIELD_NAMES`` order.
 
@@ -58,4 +69,12 @@ def flatten_observation(obs: Mapping[str, np.ndarray]) -> np.ndarray:
     return flat
 
 
-__all__ = ["ACTION_DIM", "OBS_DIM", "OBS_FIELD_NAMES", "flatten_observation"]
+__all__ = [
+    "ACTION_DIM",
+    "BLOCK_POS_SLICE",
+    "EE_POS_SLICE",
+    "GRIPPER_POSE_INDEX",
+    "OBS_DIM",
+    "OBS_FIELD_NAMES",
+    "flatten_observation",
+]

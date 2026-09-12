@@ -28,10 +28,7 @@ behaviour-cloning label for a feed-forward network.
 
 import numpy as np
 
-# Flat observation layout: qpos[5], qvel[5], gripper_pose[1], ee_pos[3], block_pos[3].
-GRIPPER_POSE_INDEX = 10
-EE_POS_SLICE = slice(11, 14)
-BLOCK_POS_SLICE = slice(14, 17)
+from lerobot_env_so101.policy import BLOCK_POS_SLICE, EE_POS_SLICE, GRIPPER_POSE_INDEX
 
 # Reach-and-close outcome. gripper_pose is the gripper ctrl target remapped to
 # [-1, 1] with +1 = fully closed; see SO101GymEnv.get_gripper_pose.

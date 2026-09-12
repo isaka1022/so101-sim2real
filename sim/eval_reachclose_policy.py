@@ -16,7 +16,7 @@ import numpy as np
 import onnxruntime as ort
 
 import lerobot_env_so101  # noqa: F401  registers the env
-from lerobot_env_so101.policy import flatten_observation
+from lerobot_env_so101.policy import BLOCK_POS_SLICE, EE_POS_SLICE, flatten_observation
 from lerobot_env_so101.scripted.reach_close import is_reach_close_success
 
 ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
@@ -49,7 +49,9 @@ def evaluate(policy_path: Path, episodes: int, max_steps: int, seed: int):
                 break
 
         successes.append(success)
-        final_distances.append(float(np.linalg.norm(flat[11:14] - flat[14:17])))
+        final_distances.append(
+            float(np.linalg.norm(flat[EE_POS_SLICE] - flat[BLOCK_POS_SLICE]))
+        )
 
     env.close()
     return np.asarray(successes, dtype=bool), np.asarray(final_distances)
