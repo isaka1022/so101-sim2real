@@ -36,6 +36,7 @@ jobs:
         run: |
           npm ci
           npm run build
+          npm test
       # docs/sim is gitignored: mkdocs copies whatever is under docs/ verbatim,
       # so the bundle is placed here rather than committed.
       - name: Stage the viewer into the docs site
