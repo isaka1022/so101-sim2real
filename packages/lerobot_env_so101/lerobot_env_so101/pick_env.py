@@ -39,7 +39,7 @@ _SAMPLING_BOUNDS = np.asarray([[0.2, -0.1], [0.4, 0.1]])
 _FIXED_BLOCK_XY = np.asarray([0.3, 0.0])
 _BLOCK_OUT_OF_BOUNDS_MARGIN = 0.05
 _LIFT_SUCCESS_HEIGHT = 0.1
-_SUCCESS_DISTANCE = 0.05
+SUCCESS_DISTANCE = 0.05
 _DENSE_REWARD_CLOSE_WEIGHT = 0.3
 _DENSE_REWARD_LIFT_WEIGHT = 0.7
 _DENSE_REWARD_CLOSE_SHARPNESS = 20.0
@@ -211,4 +211,4 @@ class SO101PickCubeGymEnv(SO101GymEnv):
         lift = block_pos[2] - self._z_init
         # bool() because the numpy comparisons return np.bool_, which leaks into
         # info["succeed"] and breaks callers that serialise it.
-        return bool(dist < _SUCCESS_DISTANCE and lift > _LIFT_SUCCESS_HEIGHT)
+        return bool(dist < SUCCESS_DISTANCE and lift > _LIFT_SUCCESS_HEIGHT)

@@ -28,6 +28,7 @@ behaviour-cloning label for a feed-forward network.
 
 import numpy as np
 
+from lerobot_env_so101.pick_env import SUCCESS_DISTANCE
 from lerobot_env_so101.policy import (
     BLOCK_POS_SLICE,
     DEFAULT_ACTION_SCALE,
@@ -35,9 +36,9 @@ from lerobot_env_so101.policy import (
     GRIPPER_POSE_INDEX,
 )
 
-# Reach-and-close outcome. gripper_pose is the gripper ctrl target remapped to
+# Reach-and-close reuses the pick task's proximity threshold; only the lift
+# requirement differs. gripper_pose is the gripper ctrl target remapped to
 # [-1, 1] with +1 = fully closed; see SO101GymEnv.get_gripper_pose.
-SUCCESS_DISTANCE = 0.05
 GRIPPER_CLOSED_THRESHOLD = 0.5
 
 # Approach waypoint height above the block centre. Descending only after the
