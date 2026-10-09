@@ -31,7 +31,7 @@ from lerobot_env_so101.mujoco_env import (
     _IK_DAMPING,
     _IK_ITERATIONS,
 )
-from lerobot_env_so101.policy import ENV_ID
+from lerobot_env_so101.policy import ENV_ID, PICK_PLACE_ENV_ID
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
 SEED = 0
@@ -143,6 +143,20 @@ def test_lifting_the_block_without_grasping_it_is_not_success():
 
     assert env._compute_reward() == 0.0
     assert env._is_success() is False
+    env.close()
+
+
+def test_block_resting_at_the_goal_without_being_carried_is_not_success():
+    env = gym.make(PICK_PLACE_ENV_ID).unwrapped
+    env.reset(seed=SEED)
+    env._data.jnt("block").qpos[:2] = env.goal_pos[:2] + [0.01, 0.0]
+    mujoco.mj_forward(env._model, env._data)
+
+    hold_open = np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+    for _ in range(5):
+        _, _, _, _, info = env.step(hold_open)
+        assert not info["succeed"]
+
     env.close()
 
 

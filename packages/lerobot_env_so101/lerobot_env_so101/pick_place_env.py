@@ -36,6 +36,9 @@ _MIN_GOAL_DISTANCE = 0.08
 _WORKSPACE_XY = np.asarray([[0.08, -0.2], [0.4, 0.2]])
 
 PLACE_SUCCESS_DISTANCE = 0.03
+# Rise above the reset height that counts as carried. A block pushed or knocked
+# along the table to the goal never gets this high.
+_MIN_CARRY_RISE = 0.03
 _PLACE_MAX_BLOCK_SPEED = 0.01
 _PLACE_OPEN_FRACTION = 0.5
 
@@ -44,6 +47,8 @@ class SO101PickPlaceGymEnv(SO101PickCubeGymEnv):
     """Environment for an SO-101 robot moving a cube to a goal position.
 
     ``environment_state`` is the block position followed by the goal position.
+    Success needs the block to have been lifted off the table earlier in the
+    episode, so pushing it to the goal does not count.
     The IK keeps the gripper pointing straight down by default, so the action
     moves the grasp point between the jaws (``ik_point_pos``) rather than the
     ``gripperframe`` site reported in ``agent_pos``.
@@ -97,6 +102,7 @@ class SO101PickPlaceGymEnv(SO101PickCubeGymEnv):
         self._goal_pos = np.asarray([*_FIXED_GOAL_XY, self._block_z])
         self._block_dof_adr = self._model.joint("block").dofadr[0]
         self._gripper_qpos_adr = self._model.joint("gripper").qposadr[0]
+        self._was_carried = False
 
         if not self.image_obs:
             self.observation_space = spaces.Dict(
@@ -131,6 +137,7 @@ class SO101PickPlaceGymEnv(SO101PickCubeGymEnv):
         mujoco.mj_forward(self._model, self._data)
 
         self._z_init = self._data.sensor("block_pos").data[2]
+        self._was_carried = False
 
         return self._compute_observation(), {}
 
@@ -138,10 +145,13 @@ class SO101PickPlaceGymEnv(SO101PickCubeGymEnv):
         """Take a step in the environment."""
         self.apply_action(action)
 
+        block_pos = self._data.sensor("block_pos").data
+        self._was_carried = self._was_carried or bool(block_pos[2] - self._z_init > _MIN_CARRY_RISE)
+
         obs = self._compute_observation()
         success = self._is_success()
 
-        block_xy = self._data.sensor("block_pos").data[:2]
+        block_xy = block_pos[:2]
         exceeded_bounds = np.any(block_xy < _WORKSPACE_XY[0]) or np.any(block_xy > _WORKSPACE_XY[1])
         terminated = bool(success or exceeded_bounds)
 
@@ -157,7 +167,7 @@ class SO101PickPlaceGymEnv(SO101PickCubeGymEnv):
         return observation
 
     def _is_success(self) -> bool:
-        """Check that the block rests at the goal and the jaw has let go of it.
+        """Check that the block was carried, rests at the goal, and the jaw has let go.
 
         The jaw opening is read from the joint, not the command: the command
         flips to open one step before the jaw has physically released the block.
@@ -167,7 +177,8 @@ class SO101PickPlaceGymEnv(SO101PickCubeGymEnv):
         gripper_range = self._model.actuator("gripper").ctrlrange
         opening = ctrl_to_normalized(self._data.qpos[self._gripper_qpos_adr], gripper_range)
         return bool(
-            np.linalg.norm(block_pos[:2] - self._goal_pos[:2]) < PLACE_SUCCESS_DISTANCE
+            self._was_carried
+            and np.linalg.norm(block_pos[:2] - self._goal_pos[:2]) < PLACE_SUCCESS_DISTANCE
             and opening > _PLACE_OPEN_FRACTION
             and block_speed < _PLACE_MAX_BLOCK_SPEED
         )
