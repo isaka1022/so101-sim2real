@@ -280,6 +280,12 @@ episodes, `random_block_position=True`, `action_scale=0.025`):
 
 The BC policy's mean final end-effector-to-block distance is 0.029 m.
 
+These numbers predate the gripper polarity fix: the policy was trained and
+evaluated while `grasp=1` closed the jaw and `grasp=0` opened it. Re-evaluating
+the shipped ONNX policy after the fix gave 19/20 success and a mean final
+distance of 0.068 m (seeds 1000-1019), so it needs to be retrained and
+re-exported (`sim/collect_demos.py`, `sim/train_bc.py`, `sim/export_onnx.py`).
+
 ## Attribution
 
 - SO-101 MJCF/URDF and control code: ported from

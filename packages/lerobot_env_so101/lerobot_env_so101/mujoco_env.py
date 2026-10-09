@@ -369,7 +369,7 @@ class SO101GymEnv(MujocoGymEnv):
         return np.concatenate([qpos, qvel, gripper_pose, ee_pos])
 
     def get_gripper_pose(self):
-        """Get the current pose of the gripper, normalized to [-1, 1]."""
+        """Gripper ctrl target normalized to [-1, 1]: -1 = fully closed, +1 = fully open."""
         gripper_range = self._model.actuator("gripper").ctrlrange
         gripper_pos = self._data.ctrl[self._gripper_ctrl_id]
         normalized = 2 * (gripper_pos - gripper_range[0]) / (gripper_range[1] - gripper_range[0]) - 1

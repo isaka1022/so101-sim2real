@@ -38,7 +38,7 @@ from lerobot_env_so101.policy import (
 
 # Reach-and-close reuses the pick task's proximity threshold; only the lift
 # requirement differs. gripper_pose is the gripper ctrl target remapped to
-# [-1, 1] with +1 = fully closed; see SO101GymEnv.get_gripper_pose.
+# [-1, 1] with -1 = fully closed; see SO101GymEnv.get_gripper_pose.
 GRIPPER_CLOSED_THRESHOLD = 0.5
 
 # Approach waypoint height above the block centre. Descending only after the
@@ -92,5 +92,5 @@ def is_reach_close_success(obs: np.ndarray) -> bool:
     obs = np.asarray(obs, dtype=np.float64)
     distance = np.linalg.norm(obs[EE_POS_SLICE] - obs[BLOCK_POS_SLICE])
     return bool(
-        distance < SUCCESS_DISTANCE and obs[GRIPPER_POSE_INDEX] > GRIPPER_CLOSED_THRESHOLD
+        distance < SUCCESS_DISTANCE and obs[GRIPPER_POSE_INDEX] < -GRIPPER_CLOSED_THRESHOLD
     )

@@ -43,6 +43,21 @@ normalized increment added to the current position each step, where `0` meant
 to hold it open, `0` to close. Full detail in
 [Action space](action-space.md#the-gripper-is-absolute-and-that-is-a-breaking-change).
 
+## The gripper polarity was inverted (fixed)
+
+**Symptom.** `grasp=1` ("open") closed the jaw and `grasp=0` ("closed") opened it.
+
+**Cause.** `GRIPPER_CLOSED_AT_CTRL_LOW` was `False`, but the `gripper` joint
+closes at its lower limit and is fully open at its upper limit. The earlier
+check rendered an image and judged it by eye; the new regression test
+(`test_grasp_zero_physically_closes_the_jaw`) measures the distance from the
+moving jaw's mesh to the `gripperframe` site instead.
+
+**Fix.** `GRIPPER_CLOSED_AT_CTRL_LOW = True`. `gripper_pose` in the observation
+is now `-1` when closed and `+1` when open, and the browser viewer's mapping
+and golden file follow. The shipped reach-and-close ONNX policy was trained
+under the old polarity and has to be retrained (see the package README).
+
 ## Arm ctrl was interpreted as PD torque, not a target angle (fixed in v0.3.0)
 
 **Symptom.** Before v0.3.0, inspecting `data.ctrl` for the arm actuators after a
