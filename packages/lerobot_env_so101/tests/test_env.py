@@ -215,7 +215,7 @@ def test_ctrl_receives_target_joint_angles_not_torques():
 
 
 def test_top_down_ik_reaches_the_target_with_the_gripper_vertical():
-    """From HOME the position-only solver reaches the same point tilted by tens of degrees."""
+    """The grasp point lands on the target with the approach axis within 2 degrees of down."""
     env = gym.make(ENV_ID, image_obs=False, top_down_ik=True).unwrapped
     env.reset(seed=SEED)
     model, data = env._model, env._data
