@@ -196,7 +196,8 @@ async function main() {
 
   // Mirrors SO101PickCubeGymEnv.reset: home the arm, then place the block. The
   // policy is trained only on episodes that start from home with the gripper
-  // open, so moving the block under a closed gripper leaves it saturated.
+  // ctrl at 0 (gripper_pose -0.82, about 18 mm open), so moving the block under
+  // a gripper commanded closed leaves it saturated.
   function resetScene(xy = blockXy) {
     generation += 1;
     inferenceInFlight = false;
