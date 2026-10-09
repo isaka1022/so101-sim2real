@@ -217,16 +217,23 @@ on why this became a standalone package instead of an upstream PR.
 - **`SO101GymEnv` is a base class, not a usable environment.** It implements
   robot control but not `step()`/`reset()`; instantiate `SO101PickCubeGymEnv`
   (or `gym.make("lerobot_env_so101/SO101PickCube-v0")`) instead.
-- **Top-down grasp is not currently reachable.** The gripper's fixed jaw
-  (including the wrist_roll_follower mesh in the wrist servo bracket) hits
-  the block's top face before the moving jaw can descend far enough to
-  straddle it. A correct grasp pose — approaching vertically, gripper
-  straddling the block — does exist kinematically, but the position-only IK
-  in this package tracks a continuous Cartesian path from the HOME pose and
+- **Top-down grasp is not reachable with the default IK.** The gripper's
+  fixed jaw (including the wrist_roll_follower mesh in the wrist servo
+  bracket) hits the block's top face before the moving jaw can descend far
+  enough to straddle it. A correct grasp pose — approaching vertically,
+  gripper straddling the block — does exist kinematically, but the default
+  position-only IK tracks a continuous Cartesian path from the HOME pose and
   converges monotonically onto a different solution branch (approach axis
-  tilted roughly 36° from vertical) instead. Reaching the vertical-approach
-  branch requires orientation-aware IK (see `docs/ROADMAP.md`); it is not
-  implemented here.
+  tilted roughly 36° from vertical) instead. `top_down_ik=True` (set by
+  `lerobot_env_so101/SO101PickPlace-v0`) adds an approach-axis constraint
+  that reaches the vertical branch; `SO101PickCube-v0` does not use it.
+- **`SO101PickPlace-v0` grasps with collision pads the real gripper does not
+  have.** MuJoCo collides the jaw meshes as convex hulls, which touch the
+  block at a point or two each and let it pivot out during the lift.
+  `jaw_pads=True` (set by that environment) enables an invisible box pad on
+  each fingertip, 5 to 7 mm proud of the mesh. Block and goal are sampled
+  from x = 0.15 to 0.30 m; farther out the gripper can no longer be held
+  vertical. See the parent repo's `docs/limitations.md`.
 - **LeRobot policy training does not automatically pick up the new grasp
   convention.** LeRobot's policy eval does not read a gym env's
   `action_space` bounds; it scales actions using the training dataset's own
@@ -242,8 +249,8 @@ on why this became a standalone package instead of an upstream PR.
 `lerobot_env_so101.scripted.scripted_reach_close` is a hand-written controller
 that moves the end effector over the block, descends onto it, and closes the
 gripper. It is **reach-and-close, not a pick**: the position-only IK cannot
-reach a vertical straddling approach (see "Top-down grasp is not currently
-reachable" above), so the block is never lifted. The end effector settles about
+reach a vertical straddling approach (see "Top-down grasp is not reachable
+with the default IK" above), so the block is never lifted. The end effector settles about
 0.027 m above the block's centre, where the fixed jaw contacts its top face.
 
 The controller is a pure function of the flattened 17-dim state observation

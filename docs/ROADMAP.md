@@ -38,20 +38,15 @@ requires the physical arm.
   now receive the IK target joint angles on `ctrl` instead of a joint-space PD
   torque, and the IK is solved once per control step rather than once per
   physics substep — see *Limitations* for the failure it replaced.
-- **Orientation-aware IK for top-down grasp.** The gripper's fixed jaw
-  (including the wrist_roll_follower mesh in the wrist servo bracket) hits
-  the block before the moving jaw can descend far enough to straddle it. A
-  correct vertical-approach grasp pose exists kinematically, but the
-  position-only IK converges monotonically from HOME onto a different
-  solution branch (approach axis tilted ~36° from vertical) and never
-  reaches it — this is a limitation of solving for position only, not a
-  workspace/reachability issue. Two candidate designs, both scoped to
-  `ik_control.py` at roughly 50-100 lines:
-  - (a) Add an orientation target to the IK objective and fix the approach
-    axis pointing straight down, so the solver only searches yaw/position.
-  - (b) Branch-aware multi-seed IK: solve from several seed
-    configurations and select the solution branch that reaches the
-    vertical-approach pose, instead of always continuing from HOME.
+- **Orientation-aware IK for top-down grasp. Done (unreleased), opt-in.**
+  `solve_ik` takes an `approach_axis` that adds two rows to the
+  Levenberg-Marquardt objective, holding one site axis along a direction
+  (straight down by default) and leaving the rotation about it free; the jaw
+  direction is chosen by seeding `wrist_roll`. `top_down_ik=True` turns it on
+  in the environment. The position-only path stays the default, so
+  `SO101PickCube-v0`, its scripted controller, and the BC policy are
+  unchanged. Still open: making the pick-cube task itself use it, which
+  changes what the action moves and needs the BC policy retrained.
 - **Denser reward shaping.** The default is `sparse`; a well-shaped `dense`
   reward (reach → align → grasp → lift) would make RL from scratch tractable.
 - **Revisit the default action scale.** `action_scale` landed in v0.1.1 with a
@@ -60,9 +55,13 @@ requires the physical arm.
 
 ## Sim expansion (v0.2.x+)
 
-- **More tasks beyond pick-cube.** Add `place` and `stack` tasks, keeping each
-  as a separate `gym.register` id under the same plugin so downstream configs
-  can select them by task name.
+- **More tasks beyond pick-cube.** `SO101PickPlace-v0` (unreleased) adds
+  pick-and-place with a scripted controller that places the block in 200 of
+  200 random episodes (`sim/eval_pick_place.py`). It grasps with fingertip
+  collision pads the real gripper does not have — see *Limitations*. Still
+  open: a `stack` task, a learned policy for place, and a `lerobot` config for
+  the new id. Each task stays a separate `gym.register` id under the same
+  plugin so downstream configs can select it by task name.
 
 ## Phase 2 — real-robot system identification (planned, not started)
 
