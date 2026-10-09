@@ -36,8 +36,8 @@ export function nameToId(mujoco, model, objType, name) {
 
 /** Map a normalized gripper command in [0, 1] (0=closed, 1=open) to ctrl radians. */
 export function normalizedToCtrl(norm, lo, hi) {
-  // GRIPPER_CLOSED_AT_CTRL_LOW is false in lerobot_env_so101/gripper.py.
-  const clipped = 1.0 - Math.min(Math.max(norm, 0.0), 1.0);
+  // GRIPPER_CLOSED_AT_CTRL_LOW is true in lerobot_env_so101/gripper.py.
+  const clipped = Math.min(Math.max(norm, 0.0), 1.0);
   return lo + clipped * (hi - lo);
 }
 

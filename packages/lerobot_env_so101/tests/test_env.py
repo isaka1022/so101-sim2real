@@ -261,6 +261,35 @@ def test_gripper_absolute_maps_endpoints_to_ctrlrange():
     env.close()
 
 
+def _moving_jaw_gap_to_ee_site(env, grasp: float) -> float:
+    """Hold ``grasp`` with the arm still; return min distance from the moving jaw's
+    mesh vertices to the ``gripperframe`` site (which sits on the fixed jaw)."""
+    env.reset(seed=SEED)
+    for _ in range(60):
+        env.step(np.array([0.0, 0.0, 0.0, grasp], dtype=np.float32))
+    model, data = env._model, env._data
+    body_id = model.body("moving_jaw_so101_v1").id
+    site_pos = data.site_xpos[env._ee_site_id]
+    gaps = []
+    for gid in np.flatnonzero(model.geom_bodyid == body_id):
+        if model.geom_type[gid] != mujoco.mjtGeom.mjGEOM_MESH:
+            continue
+        mesh_id = model.geom_dataid[gid]
+        start, count = model.mesh_vertadr[mesh_id], model.mesh_vertnum[mesh_id]
+        verts = model.mesh_vert[start : start + count]
+        world = verts @ data.geom_xmat[gid].reshape(3, 3).T + data.geom_xpos[gid]
+        gaps.append(np.linalg.norm(world - site_pos, axis=1).min())
+    return float(min(gaps))
+
+
+def test_grasp_zero_physically_closes_the_jaw():
+    env = gym.make(ENV_ID, image_obs=False).unwrapped
+    closed_gap = _moving_jaw_gap_to_ee_site(env, 0.0)
+    open_gap = _moving_jaw_gap_to_ee_site(env, 1.0)
+    env.close()
+    assert closed_gap < open_gap
+
+
 def test_gripper_action_space_bounds_are_zero_to_one():
     env = gym.make(ENV_ID)
     assert env.action_space.low[3] == pytest.approx(0.0)

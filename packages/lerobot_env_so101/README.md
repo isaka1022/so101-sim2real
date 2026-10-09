@@ -278,7 +278,7 @@ episodes, `random_block_position=True`, `action_scale=0.025`):
 | Scripted `scripted_reach_close` | 300 (seeds 0–299) | 1.000 |
 | BC policy via ONNX / onnxruntime | 100 (seeds 1000–1099) | 1.000 |
 
-The BC policy's mean final end-effector-to-block distance is 0.029 m.
+The BC policy's mean final end-effector-to-block distance is 0.032 m.
 
 ## Attribution
 
