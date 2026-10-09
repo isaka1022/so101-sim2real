@@ -24,13 +24,8 @@ from gymnasium.utils.env_checker import check_env
 
 import lerobot_env_so101  # noqa: F401  registers the gym env
 from lerobot_env_so101 import gripper
-from lerobot_env_so101.ik_control import approach_tilt, control_point, solve_ik
-from lerobot_env_so101.mujoco_env import (
-    _APPROACH_AXIS,
-    _GRASP_POINT_OFFSET,
-    _IK_DAMPING,
-    _IK_ITERATIONS,
-)
+from lerobot_env_so101.ik_control import approach_tilt, solve_ik
+from lerobot_env_so101.mujoco_env import _APPROACH_AXIS, _IK_DAMPING, _IK_ITERATIONS
 from lerobot_env_so101.policy import ENV_ID, PICK_PLACE_ENV_ID
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
@@ -221,7 +216,7 @@ def test_ctrl_receives_target_joint_angles_not_torques():
 
 def test_top_down_ik_reaches_the_target_with_the_gripper_vertical():
     """From HOME the position-only solver reaches the same point tilted by tens of degrees."""
-    env = gym.make(ENV_ID, image_obs=False).unwrapped
+    env = gym.make(ENV_ID, image_obs=False, top_down_ik=True).unwrapped
     env.reset(seed=SEED)
     model, data = env._model, env._data
     target_pos = np.asarray([0.25, 0.0, 0.05])
@@ -234,13 +229,13 @@ def test_top_down_ik_reaches_the_target_with_the_gripper_vertical():
         target_pos=target_pos,
         ik_damping=_IK_DAMPING,
         ik_iterations=200,
-        point_offset=_GRASP_POINT_OFFSET,
+        point_offset=env._ik_point_offset,
         approach_axis=_APPROACH_AXIS,
     )
     data.qpos[env._arm_dof_ids] = target_q
     mujoco.mj_forward(model, data)
 
-    position_error = np.linalg.norm(control_point(data, env._ee_site_id, _GRASP_POINT_OFFSET) - target_pos)
+    position_error = np.linalg.norm(env.ik_point_pos - target_pos)
     assert position_error < 0.002
     assert np.degrees(approach_tilt(data, env._ee_site_id, _APPROACH_AXIS)) < 2.0
 

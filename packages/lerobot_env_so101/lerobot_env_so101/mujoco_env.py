@@ -55,13 +55,26 @@ _IK_ITERATIONS = 20
 _APPROACH_AXIS = 0
 _JAW_AXIS = 2
 _ROLL_JOINT_NAME = "wrist_roll"
-# ``gripperframe`` lies on the fixed jaw's inner face. The grasp point is midway
-# between the two fingertip pads when they are 40 mm apart, at pad mid-height.
-_GRASP_POINT_OFFSET = np.asarray([-0.001, 0.0, 0.0264])
 _JAW_PAD_GEOM_NAMES = ("fixed_jaw_pad", "moving_jaw_pad")
+_GRIPPER_JOINT_NAME = "gripper"
+# Jaw angle in radians at which the two pads are parallel, 40 mm apart.
+_GRASP_JAW_ANGLE = 0.46
 # Top-down grasps hold the jaw axis along world y, so the jaws close on the
 # two faces of an axis-aligned block that the arm can straddle.
 _TOP_DOWN_JAW_DIRECTION = np.asarray([0.0, 1.0, 0.0])
+
+
+def grasp_point_offset(model: mujoco.MjModel, site_id: int) -> np.ndarray:
+    """Midpoint of the two fingertip pads at the grasp jaw angle, in the site frame.
+
+    ``gripperframe`` lies on the fixed jaw's inner face; this is the point
+    between the jaws that should sit on the block.
+    """
+    data = mujoco.MjData(model)
+    data.qpos[model.joint(_GRIPPER_JOINT_NAME).qposadr[0]] = _GRASP_JAW_ANGLE
+    mujoco.mj_forward(model, data)
+    midpoint = np.mean([data.geom_xpos[model.geom(name).id] for name in _JAW_PAD_GEOM_NAMES], axis=0)
+    return data.site_xmat[site_id].reshape(3, 3).T @ (midpoint - data.site_xpos[site_id])
 
 
 @dataclass(frozen=True)
@@ -277,7 +290,9 @@ class SO101GymEnv(MujocoGymEnv):
             self._model.geom_conaffinity[pad_ids] = 1
         self._roll_joint_id = self._model.joint(_ROLL_JOINT_NAME).id
         self._roll_index = _ARM_JOINT_NAMES.index(_ROLL_JOINT_NAME)
-        self._ik_point_offset = _GRASP_POINT_OFFSET if top_down_ik else None
+        self._ik_point_offset = (
+            grasp_point_offset(self._model, self._ee_site_id) if top_down_ik else None
+        )
         self._camera_id = mujoco.mj_name2id(self._model, mujoco.mjtObj.mjOBJ_CAMERA, "front")
 
         self._target_ee_pos: np.ndarray | None = None
