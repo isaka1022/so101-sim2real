@@ -2587,7 +2587,7 @@ clipped to the environment's Cartesian bounds after scaling.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Get the current pose of the gripper, normalized to [-1, 1].</p>
+        <p>Gripper ctrl target normalized to [-1, 1]: -1 = fully closed, +1 = fully open.</p>
 
 
             <details class="mkdocstrings-source">
@@ -2598,7 +2598,7 @@ clipped to the environment's Cartesian bounds after scaling.</p>
 <span class="normal"><a href="#__codelineno-0-374">374</a></span>
 <span class="normal"><a href="#__codelineno-0-375">375</a></span>
 <span class="normal"><a href="#__codelineno-0-376">376</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-371" name="__codelineno-0-371"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_gripper_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372"></a><span class="w">    </span><span class="sd">"""Get the current pose of the gripper, normalized to [-1, 1]."""</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372"></a><span class="w">    </span><span class="sd">"""Gripper ctrl target normalized to [-1, 1]: -1 = fully closed, +1 = fully open."""</span>
 <a id="__codelineno-0-373" name="__codelineno-0-373"></a>    <span class="n">gripper_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">actuator</span><span class="p">(</span><span class="s2">"gripper"</span><span class="p">)</span><span class="o">.</span><span class="n">ctrlrange</span>
 <a id="__codelineno-0-374" name="__codelineno-0-374"></a>    <span class="n">gripper_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">ctrl</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gripper_ctrl_id</span><span class="p">]</span>
 <a id="__codelineno-0-375" name="__codelineno-0-375"></a>    <span class="n">normalized</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">gripper_pos</span> <span class="o">-</span> <span class="n">gripper_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">gripper_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">gripper_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
@@ -3404,7 +3404,8 @@ rotates.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>packages/lerobot_env_so101/lerobot_env_so101/gripper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-32">32</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
 <span class="normal"><a href="#__codelineno-0-33">33</a></span>
 <span class="normal"><a href="#__codelineno-0-34">34</a></span>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
@@ -3412,17 +3413,16 @@ rotates.</p>
 <span class="normal"><a href="#__codelineno-0-37">37</a></span>
 <span class="normal"><a href="#__codelineno-0-38">38</a></span>
 <span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="k">def</span><span class="w"> </span><span class="nf">normalized_to_ctrl</span><span class="p">(</span><span class="n">norm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ctrlrange</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="w">    </span><span class="sd">"""Map a normalized gripper command in [0, 1] (0=closed, 1=open) to ctrl radians.</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    Out-of-range input is clipped to [0, 1] before mapping.</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    """</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">ctrlrange</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">GRIPPER_CLOSED_AT_CTRL_LOW</span><span class="p">:</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">norm</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="k">return</span> <span class="n">lo</span> <span class="o">+</span> <span class="n">norm</span> <span class="o">*</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="k">def</span><span class="w"> </span><span class="nf">normalized_to_ctrl</span><span class="p">(</span><span class="n">norm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ctrlrange</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="sd">"""Map a normalized gripper command in [0, 1] (0=closed, 1=open) to ctrl radians.</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    Out-of-range input is clipped to [0, 1] before mapping.</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    """</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">ctrlrange</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">GRIPPER_CLOSED_AT_CTRL_LOW</span><span class="p">:</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">norm</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="k">return</span> <span class="n">lo</span> <span class="o">+</span> <span class="n">norm</span> <span class="o">*</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3447,19 +3447,19 @@ rotates.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>packages/lerobot_env_so101/lerobot_env_so101/gripper.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-44">44</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
 <span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
 <span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="k">def</span><span class="w"> </span><span class="nf">ctrl_to_normalized</span><span class="p">(</span><span class="n">ctrl</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ctrlrange</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="w">    </span><span class="sd">"""Inverse of ``normalized_to_ctrl``: ctrl radians -&gt; normalized [0, 1]."""</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">ctrlrange</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctrl</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">GRIPPER_CLOSED_AT_CTRL_LOW</span><span class="p">:</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49"></a>        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">norm</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="k">return</span> <span class="n">norm</span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">def</span><span class="w"> </span><span class="nf">ctrl_to_normalized</span><span class="p">(</span><span class="n">ctrl</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">ctrlrange</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="w">    </span><span class="sd">"""Inverse of ``normalized_to_ctrl``: ctrl radians -&gt; normalized [0, 1]."""</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">ctrlrange</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>    <span class="n">norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctrl</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">hi</span> <span class="o">-</span> <span class="n">lo</span><span class="p">)</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">GRIPPER_CLOSED_AT_CTRL_LOW</span><span class="p">:</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">norm</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="k">return</span> <span class="n">norm</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

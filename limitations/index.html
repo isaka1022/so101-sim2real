@@ -497,6 +497,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-gripper-polarity-was-inverted-fixed-in-v040" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The gripper polarity was inverted (fixed in v0.4.0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -810,6 +821,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-gripper-polarity-was-inverted-fixed-in-v040" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The gripper polarity was inverted (fixed in v0.4.0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -947,6 +969,17 @@ normalized increment added to the current position each step, where <code>0</cod
 <p><strong>Fix.</strong> Command the gripper state you want rather than a change to it — <code>1</code>
 to hold it open, <code>0</code> to close. Full detail in
 <a href="../action-space/#the-gripper-is-absolute-and-that-is-a-breaking-change">Action space</a>.</p>
+<h2 id="the-gripper-polarity-was-inverted-fixed-in-v040">The gripper polarity was inverted (fixed in v0.4.0)<a class="headerlink" href="#the-gripper-polarity-was-inverted-fixed-in-v040" title="Permanent link">&para;</a></h2>
+<p><strong>Symptom.</strong> <code>grasp=1</code> ("open") closed the jaw and <code>grasp=0</code> ("closed") opened it.</p>
+<p><strong>Cause.</strong> <code>GRIPPER_CLOSED_AT_CTRL_LOW</code> was <code>False</code>, but the <code>gripper</code> joint
+closes at its lower limit and is fully open at its upper limit. The earlier
+check rendered an image and judged it by eye; the new regression test
+(<code>test_grasp_zero_physically_closes_the_jaw</code>) measures the distance from the
+moving jaw's mesh to the <code>gripperframe</code> site instead.</p>
+<p><strong>Fix.</strong> <code>GRIPPER_CLOSED_AT_CTRL_LOW = True</code>. <code>gripper_pose</code> in the observation
+is now <code>-1</code> when closed and <code>+1</code> when open, and the browser viewer's mapping
+and golden file follow, and the reach-and-close policy was retrained under the
+corrected polarity.</p>
 <h2 id="arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030">Arm ctrl was interpreted as PD torque, not a target angle (fixed in v0.3.0)<a class="headerlink" href="#arm-ctrl-was-interpreted-as-pd-torque-not-a-target-angle-fixed-in-v030" title="Permanent link">&para;</a></h2>
 <p><strong>Symptom.</strong> Before v0.3.0, inspecting <code>data.ctrl</code> for the arm actuators after a
 step showed values far outside the declared <code>ctrlrange</code> — magnitudes past 100
