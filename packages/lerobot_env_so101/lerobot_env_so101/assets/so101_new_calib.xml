@@ -104,6 +104,8 @@
                 <!-- Part wrist_roll_follower_so101_v1 -->
                 <geom type="mesh" class="visual" pos="8.32667e-17 -0.000218214 0.000949706" quat="0 1 0 0" mesh="wrist_roll_follower_so101_v1" material="wrist_roll_follower_so101_v1_material"/>
                 <geom type="mesh" class="collision" pos="8.32667e-17 -0.000218214 0.000949706" quat="0 1 0 0" mesh="wrist_roll_follower_so101_v1" material="wrist_roll_follower_so101_v1_material"/>
+                <!-- Fingertip contact pad. Its collision bit matches no other geom, so it is inert until the environment's jaw_pads option moves it to bit 1. A geom compiled with contype 0 is left out of the broadphase and cannot be enabled later. -->
+                <geom name="fixed_jaw_pad" type="box" class="collision" contype="2" conaffinity="2" pos="-0.00675 -0.0002 -0.0972" size="0.00525 0.008 0.0072"/>
                 <!-- Frame gripperframe -->
                 <site group="3" name="gripperframe" pos="-0.0079 -0.000218121 -0.0981274" quat="0.707107 -0 0.707107 -2.37788e-17"/>
                 <!-- Link moving_jaw_so101_v1 -->
@@ -114,6 +116,8 @@
                   <!-- Part moving_jaw_so101_v1 -->
                   <geom type="mesh" class="visual" pos="-5.55112e-17 -5.55112e-17 0.0189" quat="1 -0 3.00524e-16 -2.00834e-17" mesh="moving_jaw_so101_v1" material="moving_jaw_so101_v1_material"/>
                   <geom type="mesh" class="collision" pos="-5.55112e-17 -5.55112e-17 0.0189" quat="1 -0 3.00524e-16 -2.00834e-17" mesh="moving_jaw_so101_v1" material="moving_jaw_so101_v1_material"/>
+                  <!-- Fingertip contact pad, parallel to fixed_jaw_pad when the pads are 40 mm apart (gripper joint at 0.46 rad). -->
+                  <geom name="moving_jaw_pad" type="box" class="collision" contype="2" conaffinity="2" pos="-0.01233 -0.07625 0.0189" quat="0.68849 -0.68849 0.1612 -0.1612" size="0.0045 0.006 0.0072"/>
                 </body>
               </body>
             </body>

@@ -28,15 +28,18 @@ import gymnasium as gym
 
 from lerobot_env_so101.mujoco_env import GymRenderingSpec, MujocoGymEnv, SO101GymEnv
 from lerobot_env_so101.pick_env import SO101PickCubeGymEnv
-from lerobot_env_so101.policy import ENV_ID
+from lerobot_env_so101.pick_place_env import SO101PickPlaceGymEnv
+from lerobot_env_so101.policy import ENV_ID, PICK_PLACE_ENV_ID
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
 __all__ = [
     "ENV_ID",
     "GymRenderingSpec",
     "MujocoGymEnv",
+    "PICK_PLACE_ENV_ID",
     "SO101GymEnv",
     "SO101PickCubeGymEnv",
+    "SO101PickPlaceGymEnv",
     "SevenDofToFourDofAdapter",
 ]
 
@@ -44,6 +47,11 @@ gym.register(
     id=ENV_ID,
     entry_point="lerobot_env_so101.pick_env:SO101PickCubeGymEnv",
     max_episode_steps=100,
+)
+gym.register(
+    id=PICK_PLACE_ENV_ID,
+    entry_point="lerobot_env_so101.pick_place_env:SO101PickPlaceGymEnv",
+    max_episode_steps=300,
 )
 
 # lerobot's plugin discovery imports this package by name and expects the

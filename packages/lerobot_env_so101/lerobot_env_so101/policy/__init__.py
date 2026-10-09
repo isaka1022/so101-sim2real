@@ -30,6 +30,7 @@ from lerobot_env_so101.mujoco_env import _ARM_JOINT_NAMES
 # The registered gym id, used by gym.register in the package __init__ so the
 # string is written once.
 ENV_ID = "lerobot_env_so101/SO101PickCube-v0"
+PICK_PLACE_ENV_ID = "lerobot_env_so101/SO101PickPlace-v0"
 
 # Metres per unit position action. The environment's own default is 1.0, which
 # is bang-bang over most of the action range; this is the scale the scripted

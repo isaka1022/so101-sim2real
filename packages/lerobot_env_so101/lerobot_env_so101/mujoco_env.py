@@ -36,7 +36,7 @@ import numpy as np
 from gymnasium import spaces
 
 from lerobot_env_so101.gripper import normalized_to_ctrl
-from lerobot_env_so101.ik_control import solve_ik
+from lerobot_env_so101.ik_control import control_point, roll_to_align_axis, solve_ik
 
 _logger = logging.getLogger(__name__)
 
@@ -49,6 +49,19 @@ _ZERO_ACTION_TOLERANCE = 1e-6
 
 _IK_DAMPING = 0.1
 _IK_ITERATIONS = 20
+
+# Axes of the ``gripperframe`` site: x runs out of the gripper along the jaws,
+# z runs from the fixed jaw toward the moving jaw.
+_APPROACH_AXIS = 0
+_JAW_AXIS = 2
+_ROLL_JOINT_NAME = "wrist_roll"
+# ``gripperframe`` lies on the fixed jaw's inner face. The grasp point is midway
+# between the two fingertip pads when they are 40 mm apart, at pad mid-height.
+_GRASP_POINT_OFFSET = np.asarray([-0.001, 0.0, 0.0264])
+_JAW_PAD_GEOM_NAMES = ("fixed_jaw_pad", "moving_jaw_pad")
+# Top-down grasps hold the jaw axis along world y, so the jaws close on the
+# two faces of an axis-aligned block that the arm can straddle.
+_TOP_DOWN_JAW_DIRECTION = np.asarray([0.0, 1.0, 0.0])
 
 
 @dataclass(frozen=True)
@@ -194,6 +207,8 @@ class SO101GymEnv(MujocoGymEnv):
         home_position: np.ndarray = HOME_POSITION,
         cartesian_bounds: np.ndarray = CARTESIAN_BOUNDS,
         action_scale: float = 1.0,
+        top_down_ik: bool = False,
+        jaw_pads: bool = False,
     ):
         """Create the SO-101 base environment.
 
@@ -214,6 +229,14 @@ class SO101GymEnv(MujocoGymEnv):
                 positions. The IK target is clipped to this box every step.
             action_scale: Metres per unit of position action. Must be
                 positive.
+            top_down_ik: Solve the IK for the grasp point between the jaws
+                with the gripper pointing straight down, instead of for the
+                ``gripperframe`` position alone. The action then moves the
+                grasp point.
+            jaw_pads: Enable collision on the box pads at the two fingertips.
+                MuJoCo collides the jaw meshes as convex hulls, which touch a
+                block at one point each; the pads give it flat faces to be
+                held by.
 
         Raises:
             ValueError: If ``action_scale`` is not positive.
@@ -227,6 +250,7 @@ class SO101GymEnv(MujocoGymEnv):
         self._home_position = home_position
         self._cartesian_bounds = cartesian_bounds
         self._action_scale = action_scale
+        self._top_down_ik = top_down_ik
 
         super().__init__(
             xml_path=xml_path,
@@ -247,6 +271,13 @@ class SO101GymEnv(MujocoGymEnv):
         self._arm_ctrl_ids = np.asarray([self._model.actuator(name).id for name in _ARM_JOINT_NAMES])
         self._gripper_ctrl_id = self._model.actuator("gripper").id
         self._ee_site_id = self._model.site("gripperframe").id
+        if jaw_pads:
+            pad_ids = [self._model.geom(name).id for name in _JAW_PAD_GEOM_NAMES]
+            self._model.geom_contype[pad_ids] = 1
+            self._model.geom_conaffinity[pad_ids] = 1
+        self._roll_joint_id = self._model.joint(_ROLL_JOINT_NAME).id
+        self._roll_index = _ARM_JOINT_NAMES.index(_ROLL_JOINT_NAME)
+        self._ik_point_offset = _GRASP_POINT_OFFSET if top_down_ik else None
         self._camera_id = mujoco.mj_name2id(self._model, mujoco.mjtObj.mjOBJ_CAMERA, "front")
 
         self._target_ee_pos: np.ndarray | None = None
@@ -298,9 +329,36 @@ class SO101GymEnv(MujocoGymEnv):
         self._data.ctrl[self._arm_ctrl_ids] = self._home_position
         mujoco.mj_forward(self._model, self._data)
 
-        ee_pos = self._data.sensor("so101/ee_pos").data
-        self._target_ee_pos = ee_pos.copy()
+        self._target_ee_pos = self.ik_point_pos
         self._last_action_was_zero = False
+
+    @property
+    def ik_point_pos(self) -> np.ndarray:
+        """World position of the point the action moves.
+
+        The ``gripperframe`` site by default, the grasp point between the jaws
+        with ``top_down_ik``.
+        """
+        return control_point(self._data, self._ee_site_id, self._ik_point_offset)
+
+    def _top_down_seed(self) -> np.ndarray:
+        """Current arm angles with wrist_roll turned to the top-down jaw direction.
+
+        The approach-axis constraint leaves the rotation about that axis free,
+        and the solver stays on the branch nearest its seed, so the seed is
+        what selects the jaw direction.
+        """
+        seed = self._data.qpos[self._arm_dof_ids].copy()
+        seed[self._roll_index] += roll_to_align_axis(
+            self._data,
+            self._ee_site_id,
+            self._roll_joint_id,
+            _JAW_AXIS,
+            _TOP_DOWN_JAW_DIRECTION,
+        )
+        roll_range = self._model.jnt_range[self._roll_joint_id]
+        seed[self._roll_index] = np.clip(seed[self._roll_index], roll_range[0], roll_range[1])
+        return seed
 
     def apply_action(self, action: np.ndarray) -> None:
         """Apply a native 4-dim action ``[dx, dy, dz, grasp]`` via position IK.
@@ -329,7 +387,7 @@ class SO101GymEnv(MujocoGymEnv):
         # On transition from motion to hold, lock the target to the current position
         # instead of the last accumulated (and possibly overshot) target.
         if action_is_zero and not self._last_action_was_zero:
-            self._target_ee_pos = self._data.site_xpos[self._ee_site_id].copy()
+            self._target_ee_pos = self.ik_point_pos
         elif not action_is_zero:
             self._target_ee_pos = self._target_ee_pos + delta
         self._last_action_was_zero = action_is_zero
@@ -352,6 +410,9 @@ class SO101GymEnv(MujocoGymEnv):
             ik_method="levenberg_marquardt",
             ik_damping=_IK_DAMPING,
             ik_iterations=_IK_ITERATIONS,
+            seed_q=self._top_down_seed() if self._top_down_ik else None,
+            point_offset=self._ik_point_offset,
+            approach_axis=_APPROACH_AXIS if self._top_down_ik else None,
         )
         arm_ctrlrange = self._model.actuator_ctrlrange[self._arm_ctrl_ids]
         self._data.ctrl[self._arm_ctrl_ids] = np.clip(target_q, arm_ctrlrange[:, 0], arm_ctrlrange[:, 1])
