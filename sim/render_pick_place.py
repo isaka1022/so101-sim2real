@@ -3,7 +3,7 @@
 
 The goal is drawn as a green square on the table, the size of the block's
 footprint. With ``--stills-dir`` the last frame of the hover, close, lift, and
-retreat phases is also saved as a PNG, which is enough to check by eye that the
+open phases is also saved as a PNG, which is enough to check by eye that the
 block is carried between the jaws.
 
     python sim/render_pick_place.py /tmp/so101_pick_place.gif --stills-dir /tmp
@@ -22,7 +22,7 @@ from lerobot_env_so101.policy import DEFAULT_ACTION_SCALE
 from lerobot_env_so101.scripted.pick_place import Phase, PickPlaceController
 
 WIDTH, HEIGHT, FPS = 640, 480, 12
-STILL_PHASES = {Phase.HOVER: "hover", Phase.CLOSE: "close", Phase.LIFT: "lift", Phase.RETREAT: "place"}
+STILL_PHASES = {Phase.HOVER: "hover", Phase.CLOSE: "close", Phase.LIFT: "lift", Phase.OPEN: "place"}
 GOAL_MARKER_HALF_EXTENTS = np.asarray([0.02, 0.02, 0.0005])
 GOAL_MARKER_RGBA = np.asarray([0.2, 0.8, 0.3, 0.6], dtype=np.float32)
 

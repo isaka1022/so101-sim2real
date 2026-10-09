@@ -55,8 +55,10 @@ def run_episode(
     seed: int,
     on_step: Callable[[Phase], None] | None = None,
 ) -> EpisodeResult:
-    """Roll the controller out until it finishes and measure what the block did.
+    """Roll the controller out until the env terminates and measure what the block did.
 
+    ``success`` is the env's flag on the terminating step; an episode that runs
+    out of steps or controller phases without terminating is a failure.
     ``on_step`` is called after every environment step with the phase that
     produced the action.
     """
@@ -66,13 +68,13 @@ def run_episode(
     goal_pos = env.goal_pos
 
     max_rise, carry_steps, held_steps, success = 0.0, 0, 0, False
-    steps = 0
-    while steps < MAX_STEPS and not controller.done:
+    steps, terminated = 0, False
+    while steps < MAX_STEPS and not controller.done and not terminated:
         action = controller.act(env.ik_point_pos, obs["environment_state"][:3], goal_pos)
         phase = controller.phase
-        obs, _, _, _, info = env.step(action)
+        obs, _, terminated, _, info = env.step(action)
         steps += 1
-        success = info["succeed"]
+        success = terminated and info["succeed"]
 
         max_rise = max(max_rise, float(obs["environment_state"][2] - block_start[2]))
         if phase in CARRY_PHASES:
@@ -83,7 +85,7 @@ def run_episode(
 
     final_xy = obs["environment_state"][:2]
     return EpisodeResult(
-        success=bool(success and controller.done),
+        success=bool(success),
         block_xy=block_start[:2],
         goal_xy=goal_pos[:2],
         max_rise=max_rise,
@@ -95,8 +97,6 @@ def run_episode(
 
 
 def make_env(**overrides):
-    # Unwrapped: the rollout continues through the retreat after the success
-    # flag first fires, and the flag is read at the final step.
     return gym.make(
         PICK_PLACE_ENV_ID,
         random_block_position=True,
@@ -132,7 +132,7 @@ def main() -> None:
     print(f"success rate: {successes.mean():.3f} ({successes.sum()}/{len(successes)})")
     print(f"max block rise (m): min {rises.min():.3f}  median {np.median(rises):.3f}  max {rises.max():.3f}")
     print(
-        f"block-goal distance after release (m): median {np.median(distances):.4f}  max {distances.max():.4f}"
+        f"block-goal distance at episode end (m): median {np.median(distances):.4f}  max {distances.max():.4f}"
     )
     print(f"carry steps with both jaws on the block: min {held.min():.2f}  median {np.median(held):.2f}")
 

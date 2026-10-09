@@ -63,18 +63,17 @@ def test_scripted_pick_place_carries_the_block_to_the_goal():
     controller = PickPlaceController(ACTION_SCALE)
     block_z_start = obs["environment_state"][2]
 
-    max_rise, succeeded = 0.0, False
+    max_rise, terminated, info = 0.0, False, {"succeed": False}
     for _ in range(PICK_PLACE_MAX_STEPS):
-        if controller.done:
+        if controller.done or terminated:
             break
         action = controller.act(env.ik_point_pos, obs["environment_state"][:3], env.goal_pos)
-        obs, _, _, _, info = env.step(action)
+        obs, _, terminated, _, info = env.step(action)
         max_rise = max(max_rise, float(obs["environment_state"][2] - block_z_start))
-        succeeded = info["succeed"]
 
     env.close()
     assert max_rise > MIN_CARRIED_RISE, f"block rose only {max_rise:.3f} m"
-    assert succeeded, "block is not resting at the goal with the gripper open"
+    assert terminated and info["succeed"], "episode did not end with the block placed at the goal"
 
 
 def test_scripted_reach_close_is_pure_function_of_obs():
