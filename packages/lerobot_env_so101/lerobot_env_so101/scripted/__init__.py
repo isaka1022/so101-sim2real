@@ -16,9 +16,10 @@
 
 """Hand-written controllers used to label behaviour-cloning demonstrations."""
 
+from lerobot_env_so101.scripted.pick_place import PickPlaceController
 from lerobot_env_so101.scripted.reach_close import (
     is_reach_close_success,
     scripted_reach_close,
 )
 
-__all__ = ["is_reach_close_success", "scripted_reach_close"]
+__all__ = ["PickPlaceController", "is_reach_close_success", "scripted_reach_close"]
