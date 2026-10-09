@@ -141,13 +141,18 @@ between the fixed finger and the block.
 
 **Cause.** MuJoCo collides each jaw mesh as its convex hull. The two hulls form
 a V-shaped mouth that touches a block at one or two points per jaw, and the
-block pivots out of it during the lift: with the hulls alone the scripted
-controller placed the block in 6 of 20 episodes and kept both jaws on it for a
-median 7% of the carry. `jaw_pads=True` enables a box pad on each fingertip
-(`fixed_jaw_pad`, `moving_jaw_pad` in `so101_new_calib.xml`), 5 to 7 mm proud
-of the mesh surface; with them the same controller places the block in 200 of
-200 episodes with both jaws on it for the whole carry. Mass, friction, contact
-parameters, and the gripper actuator are unchanged.
+block pivots out of it during the lift. `jaw_pads=True` enables a box pad on
+each fingertip (`fixed_jaw_pad`, `moving_jaw_pad` in `so101_new_calib.xml`),
+standing roughly 5 to 7 mm proud of the mesh surface (read off the geometry,
+not measured in a run). Mass, friction, contact parameters, and the gripper
+actuator are unchanged.
+
+Measured with the scripted controller over seeds 1000 to 1199:
+
+| Command | Placed | Both jaws on the block, median share of the carry |
+|---|---|---|
+| `python sim/eval_pick_place.py --episodes 200 --seed 1000 --no-jaw-pads` | 36 of 200 | 0.05 |
+| `python sim/eval_pick_place.py --episodes 200 --seed 1000` | 200 of 200 | 1.00 |
 
 **Fix.** None. The pads are a stand-in for a flat fingertip and are not a
 measurement of the real gripper, so a grasp that holds here says nothing yet
@@ -159,11 +164,14 @@ about the real one. They are off by default and do not collide in
 **Symptom.** Far from the base the gripper tilts while carrying, and at the far
 corners the block is not picked up.
 
-**Cause.** The wrist runs out of travel. The approach-axis tilt during the
-carry stays at or under 8° for a block at x = 0.15 to 0.25 m, reaches about
-11° at x = 0.30 m, and about 20° at x = 0.34 m. At x = 0.34 m with |y| of
-0.10 m or more the block slips or is dropped for some goals, or is not lifted
-at all.
+**Cause.** The wrist runs out of travel. In single rollouts with the block at
+a fixed position and the goal at (0.22, -0.09), the largest approach-axis tilt
+during the lift and carry was roughly 4° to 8° for a block at x = 0.15 to
+0.25 m, 9° to 11° at x = 0.30 m, and 17° to 22° at x = 0.34 m. These come
+from a one-off script, not from anything in `sim/`, so read them as
+approximate. In the same kind of rollout a block at (0.34, ±0.14) was either
+dropped on the way or not lifted at all, while every position tried from
+x = 0.12 to 0.32 m, y = ±0.14 m, was placed.
 
 **Fix.** `SO101PickPlace-v0` samples block and goal from x = 0.15 to 0.30 m,
 y = ±0.10 m, which is nearer the base than the pick task's box.

@@ -57,7 +57,7 @@ requires the physical arm.
 
 - **More tasks beyond pick-cube.** `SO101PickPlace-v0` (unreleased) adds
   pick-and-place with a scripted controller that places the block in 200 of
-  200 random episodes (`sim/eval_pick_place.py`). It grasps with fingertip
+  200 random episodes (`sim/eval_pick_place.py --episodes 200 --seed 1000`). It grasps with fingertip
   collision pads the real gripper does not have — see *Limitations*. Still
   open: a `stack` task, a learned policy for place, and a `lerobot` config for
   the new id. Each task stays a separate `gym.register` id under the same

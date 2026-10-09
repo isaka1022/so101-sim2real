@@ -6,6 +6,8 @@ simulation state, so a run that trips the flag without carrying the block
 (or carries it without tripping the flag) is visible.
 
     python sim/eval_pick_place.py --episodes 20 --seed 0
+
+``--no-jaw-pads`` runs the same controller against the bare jaw meshes.
 """
 
 import argparse
@@ -109,9 +111,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--episodes", type=int, default=20)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--no-jaw-pads", action="store_true")
     args = parser.parse_args()
 
-    env = make_env()
+    env = make_env(jaw_pads=not args.no_jaw_pads)
     controller = PickPlaceController(DEFAULT_ACTION_SCALE)
     results = [run_episode(env, controller, args.seed + episode) for episode in range(args.episodes)]
     env.close()

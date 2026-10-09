@@ -47,6 +47,8 @@ rather than assert them:
 | `sim/check_gripper_polarity.py` | Confirms `grasp=0` closes and `grasp=1` opens. |
 | `sim/inspect_model.py` | Dumps physics parameters of the loaded MJCF. |
 | `sim/render_demo.py` | Renders the demo animation. |
+| `sim/eval_pick_place.py` | Runs the scripted pick-and-place controller and reports the success rate next to block rise, goal distance, and jaw contact — the basis for the numbers in [Limitations](limitations.md). |
+| `sim/render_pick_place.py` | Renders one pick-and-place episode to a GIF, with optional stills per phase. |
 
 ## Documentation
 

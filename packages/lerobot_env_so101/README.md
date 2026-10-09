@@ -231,7 +231,7 @@ on why this became a standalone package instead of an upstream PR.
   have.** MuJoCo collides the jaw meshes as convex hulls, which touch the
   block at a point or two each and let it pivot out during the lift.
   `jaw_pads=True` (set by that environment) enables an invisible box pad on
-  each fingertip, 5 to 7 mm proud of the mesh. Block and goal are sampled
+  each fingertip, roughly 5 to 7 mm proud of the mesh. Block and goal are sampled
   from x = 0.15 to 0.30 m; farther out the gripper can no longer be held
   vertical. See the parent repo's `docs/limitations.md`.
 - **LeRobot policy training does not automatically pick up the new grasp
