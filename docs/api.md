@@ -9,6 +9,8 @@ its fields are documented in
 
 ::: lerobot_env_so101.SO101PickCubeGymEnv
 
+::: lerobot_env_so101.SO101PickPlaceGymEnv
+
 ::: lerobot_env_so101.SO101GymEnv
 
 ::: lerobot_env_so101.MujocoGymEnv

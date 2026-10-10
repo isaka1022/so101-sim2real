@@ -75,7 +75,7 @@ four remaining dimensions moves the state — 0 of 4 dead. See
 
 *A hand-written controller driving a reach→gripper-close motion — not a
 successful pick-and-lift. A top-down grasp is not yet reachable with the
-position-only IK; see [Limitations](limitations.md#top-down-grasp-is-not-reachable).*
+position-only IK; see [Limitations](limitations.md#top-down-grasp-is-not-reachable-with-the-default-ik).*
 
 ## Two more things the upstream port got wrong
 

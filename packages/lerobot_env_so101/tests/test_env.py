@@ -24,9 +24,9 @@ from gymnasium.utils.env_checker import check_env
 
 import lerobot_env_so101  # noqa: F401  registers the gym env
 from lerobot_env_so101 import gripper
-from lerobot_env_so101.ik_control import solve_ik
-from lerobot_env_so101.mujoco_env import _IK_DAMPING, _IK_ITERATIONS
-from lerobot_env_so101.policy import ENV_ID
+from lerobot_env_so101.ik_control import approach_tilt, solve_ik
+from lerobot_env_so101.mujoco_env import _APPROACH_AXIS, _IK_DAMPING, _IK_ITERATIONS
+from lerobot_env_so101.policy import ENV_ID, PICK_PLACE_ENV_ID
 from lerobot_env_so101.wrappers import SevenDofToFourDofAdapter
 
 SEED = 0
@@ -141,6 +141,20 @@ def test_lifting_the_block_without_grasping_it_is_not_success():
     env.close()
 
 
+def test_block_resting_at_the_goal_without_being_carried_is_not_success():
+    env = gym.make(PICK_PLACE_ENV_ID).unwrapped
+    env.reset(seed=SEED)
+    env._data.jnt("block").qpos[:2] = env.goal_pos[:2] + [0.01, 0.0]
+    mujoco.mj_forward(env._model, env._data)
+
+    hold_open = np.array([0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+    for _ in range(5):
+        _, _, _, _, info = env.step(hold_open)
+        assert not info["succeed"]
+
+    env.close()
+
+
 def test_action_scale_scales_position_deltas():
     """The IK target must advance by scale * delta per step.
 
@@ -196,6 +210,34 @@ def test_ctrl_receives_target_joint_angles_not_torques():
     for ctrl_id, value in zip(env._arm_ctrl_ids, ctrl, strict=True):
         low, high = model.actuator_ctrlrange[ctrl_id]
         assert low <= value <= high, f"ctrl {value} outside ctrlrange [{low}, {high}]"
+
+    env.close()
+
+
+def test_top_down_ik_reaches_the_target_with_the_gripper_vertical():
+    """The grasp point lands on the target with the approach axis within 2 degrees of down."""
+    env = gym.make(ENV_ID, image_obs=False, top_down_ik=True).unwrapped
+    env.reset(seed=SEED)
+    model, data = env._model, env._data
+    target_pos = np.asarray([0.25, 0.0, 0.05])
+
+    target_q = solve_ik(
+        model=model,
+        data=data,
+        site_id=env._ee_site_id,
+        dof_ids=env._arm_dof_ids,
+        target_pos=target_pos,
+        ik_damping=_IK_DAMPING,
+        ik_iterations=200,
+        point_offset=env._ik_point_offset,
+        approach_axis=_APPROACH_AXIS,
+    )
+    data.qpos[env._arm_dof_ids] = target_q
+    mujoco.mj_forward(model, data)
+
+    position_error = np.linalg.norm(env.ik_point_pos - target_pos)
+    assert position_error < 0.002
+    assert np.degrees(approach_tilt(data, env._ee_site_id, _APPROACH_AXIS)) < 2.0
 
     env.close()
 

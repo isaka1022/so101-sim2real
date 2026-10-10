@@ -112,11 +112,12 @@ the task loop.
 **Fix.** Instantiate `SO101PickCubeGymEnv`, or better,
 `gym.make("lerobot_env_so101/SO101PickCube-v0")`.
 
-## Top-down grasp is not reachable
+## Top-down grasp is not reachable with the default IK
 
-**Symptom.** The arm reaches the block and closes the gripper, but never
-straddles it — the jaws meet above or beside the block rather than around it.
-This is what the demo animation on the [home page](index.md) shows.
+**Symptom.** In `SO101PickCube-v0` the arm reaches the block and closes the
+gripper, but never straddles it — the jaws meet above or beside the block
+rather than around it. This is what the demo animation on the
+[home page](index.md) shows.
 
 **Cause.** The gripper's fixed jaw (including the `wrist_roll_follower` mesh in
 the wrist servo bracket) hits the block's top face before the moving jaw can
@@ -126,8 +127,54 @@ position-only IK in this package, however, tracks a continuous Cartesian path
 from the HOME pose and converges monotonically onto a different solution
 branch, with the approach axis tilted roughly 36° from vertical.
 
-**Fix.** None available in this package. Reaching the vertical-approach branch
-requires orientation-aware IK, which is on the [Roadmap](ROADMAP.md).
+**Fix.** Pass `top_down_ik=True`, or use `SO101PickPlace-v0`, which sets it.
+The IK then also holds the gripper's approach axis straight down and moves the
+grasp point between the jaws instead of `gripperframe`. The default is
+unchanged, so the pick-cube task, its scripted controller, and the BC policy
+still show the symptom above.
+
+## Pick-and-place grasps with collision pads the real gripper does not have
+
+**Symptom.** In `SO101PickPlace-v0` the block is held by two invisible box
+geoms at the fingertips, so a rendered frame shows a gap of a few millimetres
+between the fixed finger and the block.
+
+**Cause.** MuJoCo collides each jaw mesh as its convex hull. The two hulls form
+a V-shaped mouth that touches a block at one or two points per jaw, and the
+block pivots out of it during the lift. `jaw_pads=True` enables a box pad on
+each fingertip (`fixed_jaw_pad`, `moving_jaw_pad` in `so101_new_calib.xml`),
+standing roughly 5 to 7 mm proud of the mesh surface (read off the geometry,
+not measured in a run). Mass, friction, contact parameters, and the gripper
+actuator are unchanged.
+
+Measured with the scripted controller over seeds 1000 to 1199:
+
+| Command | Placed | Both jaws on the block, median share of the carry |
+|---|---|---|
+| `python sim/eval_pick_place.py --episodes 200 --seed 1000 --no-jaw-pads` | 36 of 200 | 0.05 |
+| `python sim/eval_pick_place.py --episodes 200 --seed 1000` | 200 of 200 | 1.00 |
+
+**Fix.** None. The pads are a stand-in for a flat fingertip and are not a
+measurement of the real gripper, so a grasp that holds here says nothing yet
+about the real one. They are off by default and do not collide in
+`SO101PickCube-v0`.
+
+## Pick-and-place loses the vertical approach past x = 0.30 m
+
+**Symptom.** Far from the base the gripper tilts while carrying, and at the far
+corners the block is not picked up.
+
+**Cause.** The wrist runs out of travel. In single rollouts with the block at
+a fixed position and the goal at (0.22, -0.09), the largest approach-axis tilt
+during the lift and carry was roughly 4° to 8° for a block at x = 0.15 to
+0.25 m, 9° to 11° at x = 0.30 m, and 17° to 22° at x = 0.34 m. These come
+from a one-off script, not from anything in `sim/`, so read them as
+approximate. In the same kind of rollout a block at (0.34, ±0.14) was either
+dropped on the way or not lifted at all, while every position tried from
+x = 0.12 to 0.32 m, y = ±0.14 m, was placed.
+
+**Fix.** `SO101PickPlace-v0` samples block and goal from x = 0.15 to 0.30 m,
+y = ±0.10 m, which is nearer the base than the pick task's box.
 
 ## A LeRobot policy ignores the grasp convention
 

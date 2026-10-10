@@ -59,6 +59,8 @@ class SO101PickCubeGymEnv(SO101GymEnv):
         reward_type: str = "sparse",
         random_block_position: bool = False,
         action_scale: float = 1.0,
+        top_down_ik: bool = False,
+        jaw_pads: bool = False,
     ):
         """Create the pick-cube environment.
 
@@ -84,6 +86,10 @@ class SO101PickCubeGymEnv(SO101GymEnv):
             action_scale: Metres per unit of position action. Applies to
                 ``dx, dy, dz`` only — ``grasp`` is an absolute target and is
                 unaffected. Must be positive.
+            top_down_ik: Keep the gripper pointing straight down and move the
+                grasp point between the jaws instead of ``gripperframe``. See
+                ``SO101GymEnv``.
+            jaw_pads: Enable the fingertip collision pads. See ``SO101GymEnv``.
         """
         self.reward_type = reward_type
 
@@ -97,6 +103,8 @@ class SO101PickCubeGymEnv(SO101GymEnv):
             home_position=HOME_POSITION,
             cartesian_bounds=CARTESIAN_BOUNDS,
             action_scale=action_scale,
+            top_down_ik=top_down_ik,
+            jaw_pads=jaw_pads,
         )
 
         self._block_z = self._model.geom("block").size[2]
