@@ -541,10 +541,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#top-down-grasp-is-not-reachable" class="md-nav__link">
+  <a href="#top-down-grasp-is-not-reachable-with-the-default-ik" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Top-down grasp is not reachable
+        Top-down grasp is not reachable with the default IK
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pick-and-place-grasps-with-collision-pads-the-real-gripper-does-not-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pick-and-place grasps with collision pads the real gripper does not have
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pick-and-place-loses-the-vertical-approach-past-x-030-m" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pick-and-place loses the vertical approach past x = 0.30 m
       
     </span>
   </a>
@@ -865,10 +887,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#top-down-grasp-is-not-reachable" class="md-nav__link">
+  <a href="#top-down-grasp-is-not-reachable-with-the-default-ik" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Top-down grasp is not reachable
+        Top-down grasp is not reachable with the default IK
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pick-and-place-grasps-with-collision-pads-the-real-gripper-does-not-have" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pick-and-place grasps with collision pads the real gripper does not have
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pick-and-place-loses-the-vertical-approach-past-x-030-m" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pick-and-place loses the vertical approach past x = 0.30 m
       
     </span>
   </a>
@@ -1022,10 +1066,11 @@ instantiating <code>SO101GymEnv</code> directly.</p>
 the task loop.</p>
 <p><strong>Fix.</strong> Instantiate <code>SO101PickCubeGymEnv</code>, or better,
 <code>gym.make("lerobot_env_so101/SO101PickCube-v0")</code>.</p>
-<h2 id="top-down-grasp-is-not-reachable">Top-down grasp is not reachable<a class="headerlink" href="#top-down-grasp-is-not-reachable" title="Permanent link">&para;</a></h2>
-<p><strong>Symptom.</strong> The arm reaches the block and closes the gripper, but never
-straddles it — the jaws meet above or beside the block rather than around it.
-This is what the demo animation on the <a href="../">home page</a> shows.</p>
+<h2 id="top-down-grasp-is-not-reachable-with-the-default-ik">Top-down grasp is not reachable with the default IK<a class="headerlink" href="#top-down-grasp-is-not-reachable-with-the-default-ik" title="Permanent link">&para;</a></h2>
+<p><strong>Symptom.</strong> In <code>SO101PickCube-v0</code> the arm reaches the block and closes the
+gripper, but never straddles it — the jaws meet above or beside the block
+rather than around it. This is what the demo animation on the
+<a href="../">home page</a> shows.</p>
 <p><strong>Cause.</strong> The gripper's fixed jaw (including the <code>wrist_roll_follower</code> mesh in
 the wrist servo bracket) hits the block's top face before the moving jaw can
 descend far enough to straddle it. A correct grasp pose — approaching
@@ -1033,8 +1078,61 @@ vertically, gripper straddling the block — does exist kinematically. The
 position-only IK in this package, however, tracks a continuous Cartesian path
 from the HOME pose and converges monotonically onto a different solution
 branch, with the approach axis tilted roughly 36° from vertical.</p>
-<p><strong>Fix.</strong> None available in this package. Reaching the vertical-approach branch
-requires orientation-aware IK, which is on the <a href="../ROADMAP/">Roadmap</a>.</p>
+<p><strong>Fix.</strong> Pass <code>top_down_ik=True</code>, or use <code>SO101PickPlace-v0</code>, which sets it.
+The IK then also holds the gripper's approach axis straight down and moves the
+grasp point between the jaws instead of <code>gripperframe</code>. The default is
+unchanged, so the pick-cube task, its scripted controller, and the BC policy
+still show the symptom above.</p>
+<h2 id="pick-and-place-grasps-with-collision-pads-the-real-gripper-does-not-have">Pick-and-place grasps with collision pads the real gripper does not have<a class="headerlink" href="#pick-and-place-grasps-with-collision-pads-the-real-gripper-does-not-have" title="Permanent link">&para;</a></h2>
+<p><strong>Symptom.</strong> In <code>SO101PickPlace-v0</code> the block is held by two invisible box
+geoms at the fingertips, so a rendered frame shows a gap of a few millimetres
+between the fixed finger and the block.</p>
+<p><strong>Cause.</strong> MuJoCo collides each jaw mesh as its convex hull. The two hulls form
+a V-shaped mouth that touches a block at one or two points per jaw, and the
+block pivots out of it during the lift. <code>jaw_pads=True</code> enables a box pad on
+each fingertip (<code>fixed_jaw_pad</code>, <code>moving_jaw_pad</code> in <code>so101_new_calib.xml</code>),
+standing roughly 5 to 7 mm proud of the mesh surface (read off the geometry,
+not measured in a run). Mass, friction, contact parameters, and the gripper
+actuator are unchanged.</p>
+<p>Measured with the scripted controller over seeds 1000 to 1199:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Placed</th>
+<th>Both jaws on the block, median share of the carry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>python sim/eval_pick_place.py --episodes 200 --seed 1000 --no-jaw-pads</code></td>
+<td>36 of 200</td>
+<td>0.05</td>
+</tr>
+<tr>
+<td><code>python sim/eval_pick_place.py --episodes 200 --seed 1000</code></td>
+<td>200 of 200</td>
+<td>1.00</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Fix.</strong> None. The pads are a stand-in for a flat fingertip and are not a
+measurement of the real gripper, so a grasp that holds here says nothing yet
+about the real one. They are off by default and do not collide in
+<code>SO101PickCube-v0</code>.</p>
+<h2 id="pick-and-place-loses-the-vertical-approach-past-x-030-m">Pick-and-place loses the vertical approach past x = 0.30 m<a class="headerlink" href="#pick-and-place-loses-the-vertical-approach-past-x-030-m" title="Permanent link">&para;</a></h2>
+<p><strong>Symptom.</strong> Far from the base the gripper tilts while carrying, and at the far
+corners the block is not picked up.</p>
+<p><strong>Cause.</strong> The wrist runs out of travel. In single rollouts with the block at
+a fixed position and the goal at (0.22, -0.09), the largest approach-axis tilt
+during the lift and carry was roughly 4° to 8° for a block at x = 0.15 to
+0.25 m, 9° to 11° at x = 0.30 m, and 17° to 22° at x = 0.34 m. These come
+from a one-off script, not from anything in <code>sim/</code>, so read them as
+approximate. In the same kind of rollout a block at (0.34, ±0.14) was either
+dropped on the way or not lifted at all, while every position tried from
+x = 0.12 to 0.32 m, y = ±0.14 m, was placed.</p>
+<p><strong>Fix.</strong> <code>SO101PickPlace-v0</code> samples block and goal from x = 0.15 to 0.30 m,
+y = ±0.10 m, which is nearer the base than the pick task's box.</p>
 <h2 id="a-lerobot-policy-ignores-the-grasp-convention">A LeRobot policy ignores the grasp convention<a class="headerlink" href="#a-lerobot-policy-ignores-the-grasp-convention" title="Permanent link">&para;</a></h2>
 <p><strong>Symptom.</strong> The gripper behaves as though the <code>[0, 1]</code> absolute convention
 does not exist, even though the environment declares it.</p>

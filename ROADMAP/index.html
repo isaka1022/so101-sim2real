@@ -863,20 +863,15 @@ requires the physical arm.</p>
   now receive the IK target joint angles on <code>ctrl</code> instead of a joint-space PD
   torque, and the IK is solved once per control step rather than once per
   physics substep — see <em>Limitations</em> for the failure it replaced.</li>
-<li><strong>Orientation-aware IK for top-down grasp.</strong> The gripper's fixed jaw
-  (including the wrist_roll_follower mesh in the wrist servo bracket) hits
-  the block before the moving jaw can descend far enough to straddle it. A
-  correct vertical-approach grasp pose exists kinematically, but the
-  position-only IK converges monotonically from HOME onto a different
-  solution branch (approach axis tilted ~36° from vertical) and never
-  reaches it — this is a limitation of solving for position only, not a
-  workspace/reachability issue. Two candidate designs, both scoped to
-  <code>ik_control.py</code> at roughly 50-100 lines:</li>
-<li>(a) Add an orientation target to the IK objective and fix the approach
-    axis pointing straight down, so the solver only searches yaw/position.</li>
-<li>(b) Branch-aware multi-seed IK: solve from several seed
-    configurations and select the solution branch that reaches the
-    vertical-approach pose, instead of always continuing from HOME.</li>
+<li><strong>Orientation-aware IK for top-down grasp. Done (unreleased), opt-in.</strong>
+  <code>solve_ik</code> takes an <code>approach_axis</code> that adds two rows to the
+  Levenberg-Marquardt objective, holding one site axis along a direction
+  (straight down by default) and leaving the rotation about it free; the jaw
+  direction is chosen by seeding <code>wrist_roll</code>. <code>top_down_ik=True</code> turns it on
+  in the environment. The position-only path stays the default, so
+  <code>SO101PickCube-v0</code>, its scripted controller, and the BC policy are
+  unchanged. Still open: making the pick-cube task itself use it, which
+  changes what the action moves and needs the BC policy retrained.</li>
 <li><strong>Denser reward shaping.</strong> The default is <code>sparse</code>; a well-shaped <code>dense</code>
   reward (reach → align → grasp → lift) would make RL from scratch tractable.</li>
 <li><strong>Revisit the default action scale.</strong> <code>action_scale</code> landed in v0.1.1 with a
@@ -885,9 +880,13 @@ requires the physical arm.</p>
 </ul>
 <h2 id="sim-expansion-v02x">Sim expansion (v0.2.x+)<a class="headerlink" href="#sim-expansion-v02x" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>More tasks beyond pick-cube.</strong> Add <code>place</code> and <code>stack</code> tasks, keeping each
-  as a separate <code>gym.register</code> id under the same plugin so downstream configs
-  can select them by task name.</li>
+<li><strong>More tasks beyond pick-cube.</strong> <code>SO101PickPlace-v0</code> (unreleased) adds
+  pick-and-place with a scripted controller that places the block in 200 of
+  200 random episodes (<code>sim/eval_pick_place.py --episodes 200 --seed 1000</code>). It grasps with fingertip
+  collision pads the real gripper does not have — see <em>Limitations</em>. Still
+  open: a <code>stack</code> task, a learned policy for place, and a <code>lerobot</code> config for
+  the new id. Each task stays a separate <code>gym.register</code> id under the same
+  plugin so downstream configs can select it by task name.</li>
 </ul>
 <h2 id="phase-2-real-robot-system-identification-planned-not-started">Phase 2 — real-robot system identification (planned, not started)<a class="headerlink" href="#phase-2-real-robot-system-identification-planned-not-started" title="Permanent link">&para;</a></h2>
 <p>Measuring the SO-101's actual physics to replace the currently unverified
