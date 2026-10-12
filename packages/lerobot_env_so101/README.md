@@ -165,6 +165,12 @@ on why this became a standalone package instead of an upstream PR.
   damping comes from the passive joint damping) to the `<position>`
   actuators. The IK is also solved once per control step rather than once per
   physics substep, since the target angle is held across the substeps.
+- **Fixed (v0.4.0): the gripper polarity was inverted.** `grasp=1` ("open")
+  closed the jaw and `grasp=0` ("closed") opened it, because the `gripper`
+  joint closes at its lower limit and the mapping assumed the opposite.
+  **Breaking change**: `grasp` now does what the action space documents, and
+  `gripper_pose` in the observation is `-1` when closed and `+1` when open, the
+  reverse of v0.3.0. A policy trained on v0.3.0 or earlier has to be retrained.
 - **Not fixed, inherited as-is: unverified motor parameters.** `damping` /
   `frictionloss` / `armature` for the STS3215 servos are carried over
   unchanged from the upstream MJCF, which itself adapted them from the
